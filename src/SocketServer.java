@@ -3,21 +3,17 @@ import java.io.*;
 import java.net.*;
 
 public class SocketServer extends Thread{
-    private ServerSocket serverSocket;
+    private Socket serverSocket;
 
-    public SocketServer(int port) throws IOException{
-        this.serverSocket = new ServerSocket(port);
+    public SocketServer(Socket socket) throws IOException{
+        this.serverSocket = socket;
     }
 
     public void run() {
+        System.out.println("Connected to " + serverSocket.getRemoteSocketAddress());
         while(true) {
             try {
-                System.out.println("Waiting for client on port " +
-                        serverSocket.getLocalPort() + "...");
-                Socket server = serverSocket.accept();
-
-                System.out.println("Connected to " + server.getRemoteSocketAddress());
-                DataInputStream fromClient = new DataInputStream(server.getInputStream());
+                DataInputStream fromClient = new DataInputStream(serverSocket.getInputStream());
                 String clientInput;
                 try{
                     while((clientInput = fromClient.readUTF()) != null) {
@@ -27,25 +23,34 @@ public class SocketServer extends Thread{
                 } catch(IOException e){
                     System.out.println("Client disconnected.");
                 }
-                server.close();
+                serverSocket.close();
 
             }catch(SocketTimeoutException s) {
                 System.out.println("Socket timed out.");
                 break;
             }catch(IOException e) {
-                e.printStackTrace();
                 break;
             }
         }
     }
 
     public static void main(String [] args) {
-        int port = Integer.parseInt(args[0]);
-        try {
-            Thread t = new SocketServer(port);
-            t.start();
-        }catch(IOException e) {
-            e.printStackTrace();
+        int serverPort = Integer.parseInt(args[0]);
+        ServerSocket serverSocket = null;
+        Socket socket = null;
+        try{
+            System.out.println("Starting server on port " + serverPort + "...");
+            serverSocket = new ServerSocket(serverPort);
+        }catch(IOException e){}
+        System.out.println("Server started successfully.");
+        while(true){
+            try{
+                socket = serverSocket.accept();
+            } catch(IOException e){}
+
+            try{
+                new SocketServer(socket).start();
+            } catch(IOException e){}
         }
     }
 }

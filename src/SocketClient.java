@@ -15,18 +15,15 @@ public class SocketClient {
         OutputStream toServer = client.getOutputStream();
         DataOutputStream outToServer = new DataOutputStream(toServer);
 
+        System.out.println("Enter a message to send to the server. Enter q to quit. ");
         String message = "";
         while(!message.equals("q")) {
-            System.out.print("Enter a message to send to the server(Enter q to quit): ");
-
             message = input.nextLine();
 
             outToServer.writeUTF(message);
             outToServer.flush();
         }
     }
-    catch(IOException e){
-
-        }
+    catch(IOException e){}
     }
 }
