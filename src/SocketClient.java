@@ -12,16 +12,27 @@ public class SocketClient {
         Scanner input = new Scanner(System.in);
 
         System.out.println("Connected to " + client.getRemoteSocketAddress());
-        OutputStream toServer = client.getOutputStream();
-        DataOutputStream outToServer = new DataOutputStream(toServer);
+        DataOutputStream outToServer = new DataOutputStream(client.getOutputStream());
+        DataInputStream fromServer = new DataInputStream(client.getInputStream());
 
         System.out.println("Enter a message to send to the server. Enter q to quit. ");
         String message = "";
+        String response;
         while(!message.equals("q")) {
-            message = input.nextLine();
 
+            //Read in message and send to server
+            message = input.nextLine();
             outToServer.writeUTF(message);
             outToServer.flush();
+
+            //Added another check to message, otherwise would get stuck in try block
+            if(!message.equals("q")) {
+                //Read response from server
+                try{
+                    response = fromServer.readUTF();
+                    System.out.println(response);
+                } catch(IOException e){}
+            }
         }
     }
     catch(IOException e){}

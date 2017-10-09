@@ -1,4 +1,3 @@
-
 import java.io.*;
 import java.net.*;
 
@@ -14,11 +13,16 @@ public class SocketServer extends Thread{
         while(true) {
             try {
                 DataInputStream fromClient = new DataInputStream(serverSocket.getInputStream());
+                DataOutputStream toClient = new DataOutputStream(serverSocket.getOutputStream());
                 String clientInput;
                 try{
+                    //While there is input from the client, read it and reply that the message was received
                     while((clientInput = fromClient.readUTF()) != null) {
-                        if(!clientInput.equals("q"))
+                        if(!clientInput.equals("q")) {
                             System.out.println(clientInput);
+                            toClient.writeUTF("Message received by server: " + clientInput);
+                            toClient.flush();
+                        }
                     }
                 } catch(IOException e){
                     System.out.println("Client disconnected.");
