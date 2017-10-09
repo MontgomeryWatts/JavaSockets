@@ -18,13 +18,19 @@ public class SocketServer extends Thread{
 
                 System.out.println("Connected to " + server.getRemoteSocketAddress());
                 DataInputStream fromClient = new DataInputStream(server.getInputStream());
-                while(true) {
-                    System.out.println(fromClient.readUTF());
+                String clientInput;
+                try{
+                    while((clientInput = fromClient.readUTF()) != null) {
+                        if(!clientInput.equals("q"))
+                            System.out.println(clientInput);
+                    }
+                } catch(IOException e){
+                    System.out.println("Client disconnected.");
                 }
-                //server.close();
+                server.close();
 
             }catch(SocketTimeoutException s) {
-                System.out.println("Socket timed out!");
+                System.out.println("Socket timed out.");
                 break;
             }catch(IOException e) {
                 e.printStackTrace();
