@@ -2,47 +2,42 @@ import java.io.*;
 import java.net.*;
 
 public class SocketServerThread extends Thread{
+    private SocketServer server;
     private Socket serverSocket;
     private DataInputStream fromClient;
     private DataOutputStream toClient;
-    //private static ArrayList<Socket> clients = new ArrayList<>();
 
-    public SocketServerThread(Socket socket) throws IOException{
-        serverSocket = socket;
-        fromClient = new DataInputStream(serverSocket.getInputStream());
-        toClient = new DataOutputStream(serverSocket.getOutputStream());
+    public SocketServerThread(SocketServer server, Socket socket) throws IOException{
+        this.server = server;
+        this.serverSocket = socket;
+        this.fromClient = new DataInputStream(serverSocket.getInputStream());
+        this.toClient = new DataOutputStream(serverSocket.getOutputStream());
     }
 
     public void print(String message){
         try {
-            toClient.writeUTF("Message received by server: " + message);
+            toClient.writeUTF(message);
             toClient.flush();
         } catch (IOException e){
-            System.out.println("Error");
+            e.printStackTrace();
         }
     }
 
     public void run() {
         System.out.println("Connected to " + serverSocket.getRemoteSocketAddress());
         while(true) {
-            try {
-                String clientInput;
                 try{
-                    //While there is input from the client, read it and add to message Queue
-                    while((clientInput = fromClient.readUTF()) != null) {
-                        SocketServer.messagesToSend.add(clientInput);
-                    }
+                    while(true)
+                        server.printToAllClients(fromClient.readUTF());
                 } catch(IOException e){
                     System.out.println("Client disconnected.");
+                    break;
                 }
-                serverSocket.close();
-
-            }catch(SocketTimeoutException s) {
-                System.out.println("Socket timed out.");
-                break;
-            }catch(IOException e) {
-                break;
-            }
+                finally{
+                    try{
+                        serverSocket.close();
+                    } catch(IOException e){}
+                }
         }
     }
 

@@ -5,10 +5,10 @@ import java.util.Scanner;
 public class SocketClient {
 
     public static void main(String[] args) {
-	String server = args[0];
+	String hostName = args[0];
 	int portNumber = Integer.parseInt(args[1]);
 	try{
-        Socket client = new Socket(server, portNumber);
+        Socket client = new Socket(hostName, portNumber);
         Scanner input = new Scanner(System.in);
 
         System.out.println("Connected to " + client.getRemoteSocketAddress());
