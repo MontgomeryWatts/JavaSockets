@@ -1,45 +1,29 @@
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
 
-public class SocketServer extends Thread{
-    private Socket serverSocket;
+public class SocketServer {
+    private static ArrayList<SocketServerThread> threads;
 
-    public SocketServer(Socket socket) throws IOException{
-        this.serverSocket = socket;
+    public SocketServer(){
+        threads = new ArrayList<>();
     }
 
-    public void run() {
-        System.out.println("Connected to " + serverSocket.getRemoteSocketAddress());
-        while(true) {
-            try {
-                DataInputStream fromClient = new DataInputStream(serverSocket.getInputStream());
-                DataOutputStream toClient = new DataOutputStream(serverSocket.getOutputStream());
-                String clientInput;
-                try{
-                    //While there is input from the client, read it and reply that the message was received
-                    while((clientInput = fromClient.readUTF()) != null) {
-                        if(!clientInput.equals("q")) {
-                            System.out.println(clientInput);
-                            toClient.writeUTF("Message received by server: " + clientInput);
-                            toClient.flush();
-                        }
-                    }
-                } catch(IOException e){
-                    System.out.println("Client disconnected.");
-                }
-                serverSocket.close();
+    public void addThread(SocketServerThread thread){
+        threads.add(thread);
+    }
 
-            }catch(SocketTimeoutException s) {
-                System.out.println("Socket timed out.");
-                break;
-            }catch(IOException e) {
-                break;
-            }
+    public synchronized void printToAllClients(String clientInput) {
+        System.out.println(clientInput);
+        for (SocketServerThread s : threads) {
+            s.print(clientInput);
         }
     }
 
     public static void main(String [] args) {
         int serverPort = Integer.parseInt(args[0]);
+        SocketServer mainServer = new SocketServer();
         ServerSocket serverSocket = null;
         Socket socket = null;
         try{
@@ -53,7 +37,9 @@ public class SocketServer extends Thread{
             } catch(IOException e){}
 
             try{
-                new SocketServer(socket).start();
+                SocketServerThread serverThread = new SocketServerThread(mainServer, socket);
+                mainServer.addThread(serverThread);
+                serverThread.start();
             } catch(IOException e){}
         }
     }
