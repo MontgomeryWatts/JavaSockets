@@ -18,9 +18,7 @@ public class SocketServerThread extends Thread{
         try {
             toClient.writeUTF(message);
             toClient.flush();
-        } catch (IOException e){
-            e.printStackTrace();
-        }
+        } catch (IOException e){}
     }
 
     public void run() {
