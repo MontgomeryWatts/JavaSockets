@@ -9,24 +9,24 @@ public class ReceiveMessageThread extends Thread {
 
     public ReceiveMessageThread(Socket s) {
         try {
-            this.fromServer = new DataInputStream(s.getInputStream());
-            this.smtRunning = true;
+            fromServer = new DataInputStream(s.getInputStream());
+            smtRunning = true;
         } catch (IOException e) {
             System.out.println("Error constructing ReceiveMessageThread");
         }
     }
 
     public void turnOff() {
-        this.smtRunning = false;
+        smtRunning = false;
     }
 
     public void run() {
         String message;
-        do {
+        while (smtRunning) {
             try {
                 if ((message = fromServer.readUTF()) != null)
                     System.out.println(message);
             } catch (IOException e) {}
-        } while (smtRunning);
+        }
     }
 }

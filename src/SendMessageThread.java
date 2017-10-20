@@ -8,7 +8,7 @@ public class SendMessageThread extends Thread{
 
     public SendMessageThread(Socket s){
         try{
-            this.toServer = new DataOutputStream(s.getOutputStream());
+            toServer = new DataOutputStream(s.getOutputStream());
         } catch(IOException e){
             System.out.println("Error constructing SendMessageThread");
         }

@@ -2,23 +2,32 @@ import java.io.*;
 import java.net.*;
 
 public class SocketServerThread extends Thread{
-    private SocketServer server;
+    private SocketServer parentServer;
     private Socket clientSocket;
     private DataInputStream fromClient;
     private DataOutputStream toClient;
+    private int ID;
 
     public SocketServerThread(SocketServer server, Socket socket) throws IOException{
-        this.server = server;
-        this.clientSocket = socket;
-        this.fromClient = new DataInputStream(clientSocket.getInputStream());
-        this.toClient = new DataOutputStream(clientSocket.getOutputStream());
+        parentServer = server;
+        clientSocket = socket;
+        fromClient = new DataInputStream(clientSocket.getInputStream());
+        toClient = new DataOutputStream(clientSocket.getOutputStream());
     }
 
     public void print(String message){
         try {
-            toClient.writeUTF("Message received from server: " + message);
+            toClient.writeUTF(message);
             toClient.flush();
-        } catch (IOException e){}
+        } catch (IOException e){
+            System.out.println("Error sending messages to client.");
+        }
+    }
+
+    public int getID(){ return ID;}
+
+    public void setID(int newID){
+        ID = newID;
     }
 
     public void run() {
@@ -28,19 +37,17 @@ public class SocketServerThread extends Thread{
             while(!clientInput.equals("q")){
                 clientInput = fromClient.readUTF();
                 if(!clientInput.equals("q"))
-                    server.printToAllClients(clientInput);
-                else
+                    parentServer.printToAllClients("Anonymous " + getID() + ": " + clientInput);
+                else {
                     print("Closing program.");
+                    clientSocket.close();
+
+                    parentServer.removeThread(this);
+                    parentServer.printToAllClients("Anonymous " + getID() + " has disconnected");
+                }
             }
         } catch(IOException e){
-            System.out.println("Client disconnected.");
-        }
-        finally{
-            try{
-                clientSocket.close();
-                server.removeThread(this);
-            } catch(IOException e){}
+            System.out.println("Client disconnected unexpectedly.");
         }
     }
-
 }

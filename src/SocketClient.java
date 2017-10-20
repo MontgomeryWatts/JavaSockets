@@ -1,16 +1,16 @@
 import java.io.*;
 import java.net.*;
-import java.util.Scanner;
 
 public class SocketClient {
 
     public static void main(String[] args) {
 	    try{
-            Socket client = new Socket(args[0], Integer.parseInt(args[1]));
+            Socket socket = new Socket(args[0], Integer.parseInt(args[1]));
 
-            System.out.println("Connected to " + client.getRemoteSocketAddress());
-            ReceiveMessageThread rmt = new ReceiveMessageThread(client);
-            SendMessageThread smt = new SendMessageThread(client);
+
+            System.out.println("Connected to " + socket.getRemoteSocketAddress());
+            ReceiveMessageThread rmt = new ReceiveMessageThread(socket);
+            SendMessageThread smt = new SendMessageThread(socket);
 
             rmt.start();
             smt.start();
