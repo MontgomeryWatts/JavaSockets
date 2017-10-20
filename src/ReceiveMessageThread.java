@@ -2,22 +2,31 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-public class ReceiveMessageThread extends Thread{
-    private Socket socket;
+public class ReceiveMessageThread extends Thread {
+
     private DataInputStream fromServer;
-    public ReceiveMessageThread(Socket s){
+    private volatile boolean smtRunning;
+
+    public ReceiveMessageThread(Socket s) {
         try {
-            this.socket = s;
             this.fromServer = new DataInputStream(s.getInputStream());
-        } catch (IOException e){}
+            this.smtRunning = true;
+        } catch (IOException e) {
+            System.out.println("Error constructing ReceiveMessageThread");
+        }
     }
 
-    public void run(){
+    public void turnOff() {
+        this.smtRunning = false;
+    }
+
+    public void run() {
         String message;
-        while(true)
+        do {
             try {
                 if ((message = fromServer.readUTF()) != null)
                     System.out.println(message);
-            } catch (IOException e){}
+            } catch (IOException e) {}
+        } while (smtRunning);
     }
 }

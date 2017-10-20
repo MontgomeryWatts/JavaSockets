@@ -14,6 +14,8 @@ public class SocketServer {
         threads.add(thread);
     }
 
+    public void removeThread(SocketServerThread thread) { threads.remove(thread); }
+
     public synchronized void printToAllClients(String clientInput) {
         System.out.println(clientInput);
         for (SocketServerThread s : threads) {
@@ -29,7 +31,9 @@ public class SocketServer {
         try{
             System.out.println("Starting server on port " + serverPort + "...");
             serverSocket = new ServerSocket(serverPort);
-        }catch(IOException e){}
+        }catch(IOException e){
+            System.out.println("Error starting port on " + serverPort);
+        }
         System.out.println("Server started successfully.");
         while(true){
             try{

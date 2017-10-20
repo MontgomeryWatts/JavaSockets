@@ -4,14 +4,14 @@ import java.net.Socket;
 import java.util.Scanner;
 
 public class SendMessageThread extends Thread{
-    private Socket socket;
     private DataOutputStream toServer;
 
     public SendMessageThread(Socket s){
         try{
-            this.socket = s;
             this.toServer = new DataOutputStream(s.getOutputStream());
-        } catch(IOException e){}
+        } catch(IOException e){
+            System.out.println("Error constructing SendMessageThread");
+        }
     }
 
     public void run(){
@@ -20,10 +20,11 @@ public class SendMessageThread extends Thread{
         Scanner s = new Scanner(System.in);
         while (!message.equals("q")){
             message = s.nextLine();
-            if(!message.equals("q"))
-                try {
-                    toServer.writeUTF(message);
-                } catch(IOException e){}
+            try {
+                toServer.writeUTF(message);
+            } catch(IOException e){
+                System.out.println("Error sending message to server.");
+            }
         }
     }
 }
