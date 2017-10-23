@@ -43,7 +43,7 @@ public class SocketServerThread extends Thread{
                     clientSocket.close();
 
                     parentServer.removeThread(this);
-                    parentServer.printToAllClients("Anonymous " + getID() + " has disconnected");
+                    parentServer.printToAllClients("Anonymous " + getID() + " has disconnected.");
                 }
             }
         } catch(IOException e){
