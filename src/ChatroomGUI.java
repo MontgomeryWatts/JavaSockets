@@ -1,44 +1,38 @@
-import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import javafx.application.Application;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.stage.Stage;
 
-public class ChatroomGUI extends JFrame{
-    private JTextArea messageArea;
-    private JTextField enterText;
-    private JButton sendMessage;
-    private JPanel mainPanel;
+public class ChatroomGUI extends Application {
 
-    public ChatroomGUI(){
-        super("Chatroom");
-        setContentPane(mainPanel);
-        setSize(500, 500);
-        setLocationRelativeTo(null);
-        setVisible(true);
-        enterText.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String message = enterText.getText();
-                if(message.equals("")){} //Prevents empty lines from being sent
-                else {
-                    messageArea.append(message + "\n");
-                    enterText.setText("");
-                }
-            }
-        });
-        sendMessage.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String message = enterText.getText();
-                if(message.equals("")){}
-                else{
-                    messageArea.append(message + "\n");
-                    enterText.setText("");
-                }
-            }
-        });
+    public void start(Stage primaryStage){
+
+        BorderPane pane = new BorderPane();
+        BorderPane messageArea = new BorderPane();
+        TextField text = new TextField();
+        Button sendButton = new Button("Send");
+        text.setPromptText("Enter messages here!");
+
+        sendButton.setMinSize(30,20);
+        messageArea.setCenter(text);
+        messageArea.setRight(sendButton);
+
+        pane.setCenter(new TextArea());
+        pane.setBottom(messageArea);
+        Scene scene = new Scene(pane);
+        primaryStage.setScene(scene);
+        primaryStage.setTitle("Let's chat!");
+        primaryStage.show();
     }
 
     public static void main(String[] args) {
-        ChatroomGUI test = new ChatroomGUI();
+        Application.launch(args);
     }
 }
+
