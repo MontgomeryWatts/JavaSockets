@@ -1,3 +1,5 @@
+package CLI;
+
 import java.io.*;
 import java.net.*;
 
@@ -20,7 +22,7 @@ public class SocketServerThread extends Thread{
             toClient.writeUTF(message);
             toClient.flush();
         } catch (IOException e){
-            System.out.println("Error sending messages to client.");
+            e.printStackTrace();
         }
     }
 

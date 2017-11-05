@@ -1,3 +1,7 @@
+package GUI;
+
+import javafx.scene.control.TextArea;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
@@ -6,8 +10,10 @@ public class ReceiveMessageThread extends Thread {
 
     private DataInputStream fromServer;
     private volatile boolean smtRunning;
+    private TextArea textArea;
 
-    public ReceiveMessageThread(Socket s) {
+    public ReceiveMessageThread(Socket s, TextArea textArea) {
+        this.textArea = textArea;
         try {
             fromServer = new DataInputStream(s.getInputStream());
             smtRunning = true;
@@ -25,7 +31,7 @@ public class ReceiveMessageThread extends Thread {
         while (smtRunning) {
             try {
                 if ((message = fromServer.readUTF()) != null)
-                    System.out.println(message);
+                    textArea.appendText(message + "\n");
             } catch (IOException e) {}
         }
     }
