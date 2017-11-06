@@ -1,8 +1,6 @@
 package GUI;
 
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
@@ -17,8 +15,6 @@ public class ChatroomGUI extends Application {
 
     public void start(Stage primaryStage){
         Socket socket = null;
-        ReceiveMessageThread rmt = null;
-        SendMessageThread smt = null;
 
         BorderPane pane = new BorderPane();
         BorderPane messageArea = new BorderPane();
@@ -29,29 +25,32 @@ public class ChatroomGUI extends Application {
 
         try {
             socket = new Socket("127.0.0.1", 6000);
-
-            System.out.println("Connected to " + socket.getRemoteSocketAddress());
-            rmt = new ReceiveMessageThread(socket, messageDisplay);
-            smt = new SendMessageThread(socket);
-            rmt.start();
-            smt.start();
-
         } catch(Exception e){}
-        final SendMessageThread newSmt = smt;
+
+        final ReceiveMessageThread rmt = new ReceiveMessageThread(socket, messageDisplay);
+        final SendMessageThread smt = new SendMessageThread(socket, text);
+        rmt.start();
+        smt.start();
 
         sendButton.setMinSize(30,20);
         messageDisplay.setEditable(false);
         messageArea.setCenter(text);
         messageArea.setRight(sendButton);
 
-        text.setOnAction(event -> {
-             newSmt.send(text.getText());
-             text.clear();
-         });
+        text.setOnAction(event ->  {
+            if(text.getText().equals("")){}
+            else{
+                smt.send(text.getText());
+                text.clear();
+            }
+        });
 
-        sendButton.setOnAction(event -> {
-            newSmt.send(text.getText());
-            text.clear();
+        sendButton.setOnAction(event ->  {
+            if(text.getText().equals("")){}
+            else{
+                smt.send(text.getText());
+                text.clear();
+            }
         });
 
 
@@ -62,6 +61,11 @@ public class ChatroomGUI extends Application {
         primaryStage.setTitle("Let's chat!");
         primaryStage.setMinHeight(300);
         primaryStage.setMinWidth(300);
+        primaryStage.setOnCloseRequest(event -> {
+            smt.send("q");
+            rmt.close();
+            smt.close();
+        });
         primaryStage.show();
     }
 

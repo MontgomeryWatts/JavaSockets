@@ -22,7 +22,7 @@ public class SocketServerThread extends Thread{
             toClient.writeUTF(message);
             toClient.flush();
         } catch (IOException e){
-            e.printStackTrace();
+            System.out.println("Error printing to client.");;
         }
     }
 

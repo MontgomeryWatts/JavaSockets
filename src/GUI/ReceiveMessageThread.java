@@ -9,26 +9,26 @@ import java.net.Socket;
 public class ReceiveMessageThread extends Thread {
 
     private DataInputStream fromServer;
-    private volatile boolean smtRunning;
+    private volatile boolean running;
     private TextArea textArea;
 
     public ReceiveMessageThread(Socket s, TextArea textArea) {
         this.textArea = textArea;
         try {
             fromServer = new DataInputStream(s.getInputStream());
-            smtRunning = true;
+            running = true;
         } catch (IOException e) {
             System.out.println("Error constructing ReceiveMessageThread");
         }
     }
 
-    public void turnOff() {
-        smtRunning = false;
+    public void close() {
+        running = false;
     }
 
     public void run() {
         String message;
-        while (smtRunning) {
+        while (running) {
             try {
                 if ((message = fromServer.readUTF()) != null)
                     textArea.appendText(message + "\n");
