@@ -9,11 +9,9 @@ import java.util.Scanner;
 
 public class SendMessageThread extends Thread{
     private DataOutputStream toServer;
-    private TextField textField;
-    private volatile boolean running;
+    private boolean running;
 
-    public SendMessageThread(Socket s, TextField textField){
-        this.textField = textField;
+    public SendMessageThread(Socket s){
         running = true;
         try{
             toServer = new DataOutputStream(s.getOutputStream());
@@ -22,16 +20,15 @@ public class SendMessageThread extends Thread{
         }
     }
 
-    public void close() {
-        running = false;
-    }
+    public void close(){ running = false;}
 
     public void send(String message) {
         try {
             toServer.writeUTF(message);
             toServer.flush();
         } catch(IOException e) {
-            System.out.println("Error sending message to server.");
+            System.out.println("Connection to server lost");
+            close();
         }
     }
 
@@ -41,6 +38,7 @@ public class SendMessageThread extends Thread{
                 sleep(50);
             } catch(InterruptedException e) {}
         }
+        System.out.println("SMT closed");
     }
 }
 

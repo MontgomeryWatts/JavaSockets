@@ -47,24 +47,29 @@ public class ChatroomGUI extends Application {
 
         //Initialize and start Threads to send and retrieve messages to/from server
         final ReceiveMessageThread rmt = new ReceiveMessageThread(socket, messageDisplay);
-        final SendMessageThread smt = new SendMessageThread(socket, text);
+        final SendMessageThread smt = new SendMessageThread(socket);
         rmt.start();
         smt.start();
+
 
         //Set actions for TextField and Button to send text
         text.setOnAction(event ->  {
             if(text.getText().replaceAll("\\s+", "").equals("")){}
             else{
-                smt.send(text.getText());
-                text.clear();
+                if(smt.isAlive()) {
+                    smt.send(text.getText());
+                    text.clear();
+                }
             }
         });
 
         sendButton.setOnAction(event ->  {
             if(text.getText().replaceAll("\\s+", "").equals("")){}
             else{
-                smt.send(text.getText());
-                text.clear();
+                if(smt.isAlive()) {
+                    smt.send(text.getText());
+                    text.clear();
+                }
             }
         });
 

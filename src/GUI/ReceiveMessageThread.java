@@ -9,7 +9,7 @@ import java.net.Socket;
 public class ReceiveMessageThread extends Thread {
 
     private DataInputStream fromServer;
-    private volatile boolean running;
+    private boolean running;
     private TextArea textArea;
 
     public ReceiveMessageThread(Socket s, TextArea textArea) {
@@ -30,9 +30,13 @@ public class ReceiveMessageThread extends Thread {
         String message;
         while (running) {
             try {
-                if ((message = fromServer.readUTF()) != null)
-                    textArea.appendText(message + "\n");
-            } catch (IOException e) {}
+                message = fromServer.readUTF();
+                textArea.appendText(message + "\n");
+            } catch (IOException e) {
+                System.out.println("Connection to server lost.");
+                close();
+            }
         }
+        System.out.println("RMT closed");
     }
 }
