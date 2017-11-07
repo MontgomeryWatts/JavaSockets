@@ -1,7 +1,9 @@
-package CLI;
+package GUI;
 
-import java.io.*;
-import java.net.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
 
 public class SocketServerThread extends Thread{
     private SocketServer parentServer;
@@ -34,9 +36,9 @@ public class SocketServerThread extends Thread{
         System.out.println("Connected to " + clientSocket.getRemoteSocketAddress());
         String clientInput = "";
         try{
-            while(!clientInput.equals("q")){
+            while(!clientInput.equals(SocketServer.CLOSE_THREAD_MESSAGE)){
                 clientInput = fromClient.readUTF();
-                if(!clientInput.equals("q"))
+                if(!clientInput.equals(SocketServer.CLOSE_THREAD_MESSAGE))
                     parentServer.printToAllClients("Anonymous " + getID() + ": " + clientInput);
                 else {
                     print("Closing program.");
