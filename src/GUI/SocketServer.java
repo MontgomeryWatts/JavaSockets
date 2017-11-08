@@ -1,37 +1,40 @@
 package GUI;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
 public class SocketServer {
-    public static final String CLOSE_THREAD_MESSAGE = "Shutdown Thread";
+    static final String CLOSE_THREAD_MESSAGE = "Shutdown Thread";
+    static final File LOGIN_INFO_FILE = new File("logininfo.txt");
     private ArrayList<SocketServerThread> threads;
     private int clients;
 
-    public SocketServer(){
+    private SocketServer(){
         threads = new ArrayList<>();
         clients = 0;
     }
 
-    public void addThread(SocketServerThread thread){
+    private void addThread(SocketServerThread thread){
         threads.add(thread);
         clients++;
     }
 
-    public void removeThread(SocketServerThread thread) { threads.remove(thread); }
+    void removeThread(SocketServerThread thread) { threads.remove(thread); }
 
-    public void printToAllClients(String clientInput) {
+    void printToAllClients(String clientInput) {
         System.out.println(clientInput);
         for (SocketServerThread s : threads) {
             s.print(clientInput);
         }
     }
 
-    public int getClientNumber(){ return clients;}
+    private int getClientNumber(){ return clients;}
 
     public static void main(String [] args) {
+
         int serverPort = Integer.parseInt(args[0]);
         SocketServer mainServer = new SocketServer();
         ServerSocket serverSocket = null;
@@ -50,14 +53,18 @@ public class SocketServer {
 
             try{
                 socket = serverSocket.accept();
-            } catch(IOException e){}
+            } catch(IOException e){
+                System.out.println("Error accepting new Client.");
+            }
 
             try{
                 SocketServerThread serverThread = new SocketServerThread(mainServer, socket);
                 mainServer.addThread(serverThread);
                 serverThread.start();
                 serverThread.setID(mainServer.getClientNumber());
-            } catch(IOException e){}
+            } catch(IOException e){
+                System.out.println("Error creating new SocketServerThread");
+            }
         }
 
     }

@@ -54,7 +54,10 @@ public class ChatroomGUI extends Application {
 
         //Set actions for TextField and Button to send text
         text.setOnAction(event ->  {
-            if(text.getText().replaceAll("\\s+", "").equals("")){}
+            //Prevents empty messages from being sent
+            if(text.getText().replaceAll("\\s+", "").equals("")){
+
+            }
             else{
                 if(smt.isAlive()) {
                     smt.send(text.getText());
@@ -64,6 +67,7 @@ public class ChatroomGUI extends Application {
         });
 
         sendButton.setOnAction(event ->  {
+            //Prevents empty messages from being sent
             if(text.getText().replaceAll("\\s+", "").equals("")){}
             else{
                 if(smt.isAlive()) {
