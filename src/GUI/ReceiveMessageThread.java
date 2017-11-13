@@ -12,7 +12,13 @@ public class ReceiveMessageThread extends Thread {
     private boolean running;
     private TextArea textArea;
 
-    public ReceiveMessageThread(Socket s, TextArea textArea) {
+    /**
+     * Constructor for ReceiveMessageThread. Used to retrieve messages from
+     * the server and append them to the GUI's text area.
+     * @param s The socket to communicate on.
+     * @param textArea The GUI to append text to.
+     */
+    ReceiveMessageThread(Socket s, TextArea textArea) {
         this.textArea = textArea;
         try {
             fromServer = new DataInputStream(s.getInputStream());
@@ -22,10 +28,16 @@ public class ReceiveMessageThread extends Thread {
         }
     }
 
-    public void close() {
+    /**
+     * Used to stop the while loop.
+     */
+    void close() {
         running = false;
     }
 
+    /**
+     * Checks for messages from the server and appends them to the text area.
+     */
     public void run() {
         String message;
         while (running) {
@@ -37,6 +49,5 @@ public class ReceiveMessageThread extends Thread {
                 close();
             }
         }
-        System.out.println("RMT closed");
     }
 }

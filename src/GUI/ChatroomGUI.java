@@ -8,6 +8,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.net.Socket;
 
 
@@ -43,7 +44,9 @@ public class ChatroomGUI extends Application {
         //Try to create a socket to communicate on
         try {
             socket = new Socket("127.0.0.1", 6000);
-        } catch(Exception e){}
+        } catch(IOException e){
+            System.exit(1);
+        }
 
         //Initialize and start Threads to send and retrieve messages to/from server
         final ReceiveMessageThread rmt = new ReceiveMessageThread(socket, messageDisplay);
@@ -55,10 +58,7 @@ public class ChatroomGUI extends Application {
         //Set actions for TextField and Button to send text
         text.setOnAction(event ->  {
             //Prevents empty messages from being sent
-            if(text.getText().replaceAll("\\s+", "").equals("")){
-
-            }
-            else{
+            if(!text.getText().replaceAll("\\s+", "").equals("")){
                 if(smt.isAlive()) {
                     smt.send(text.getText());
                     text.clear();
@@ -68,9 +68,8 @@ public class ChatroomGUI extends Application {
 
         sendButton.setOnAction(event ->  {
             //Prevents empty messages from being sent
-            if(text.getText().replaceAll("\\s+", "").equals("")){}
-            else{
-                if(smt.isAlive()) {
+            if(!text.getText().replaceAll("\\s+", "").equals("")) {
+                if (smt.isAlive()) {
                     smt.send(text.getText());
                     text.clear();
                 }

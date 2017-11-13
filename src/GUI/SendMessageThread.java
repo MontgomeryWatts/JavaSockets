@@ -1,17 +1,20 @@
 package GUI;
 
-import javafx.scene.control.TextField;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Scanner;
 
 public class SendMessageThread extends Thread{
     private DataOutputStream toServer;
     private boolean running;
 
-    public SendMessageThread(Socket s){
+    /**
+     * Constructor for SendMessageThread. Used to send messages to the
+     * server.
+     * @param s The socket to communicate on.
+     */
+    SendMessageThread(Socket s){
         running = true;
         try{
             toServer = new DataOutputStream(s.getOutputStream());
@@ -20,9 +23,16 @@ public class SendMessageThread extends Thread{
         }
     }
 
-    public void close(){ running = false;}
+    /**
+     * Used to terminate the loop within run(), or upon an exception being thrown.
+     */
+    void close(){ running = false;}
 
-    public void send(String message) {
+    /**
+     * Sends a message to the server.
+     * @param message The String to send to the server.
+     */
+    void send(String message) {
         try {
             toServer.writeUTF(message);
             toServer.flush();
@@ -32,13 +42,15 @@ public class SendMessageThread extends Thread{
         }
     }
 
+    /**
+     * Sleep until interrupted. All calls to send() happen from the JavaFX client.
+     */
     public void run(){
         while (running){
             try {
                 sleep(50);
             } catch(InterruptedException e) {}
         }
-        System.out.println("SMT closed");
     }
 }
 

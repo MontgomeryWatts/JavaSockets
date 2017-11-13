@@ -12,18 +12,36 @@ public class SocketServer {
     private ArrayList<SocketServerThread> threads;
     private int clients;
 
+    /**
+     * Constructor for SocketServer. Used to keep track of alive SocketServerThreads and
+     * hand out ID numbers.
+     */
     private SocketServer(){
         threads = new ArrayList<>();
         clients = 0;
     }
 
+    /**
+     * Adds a SocketServerThread to the list of threads, and gives it an ID number.
+     * @param thread The SocketServerThread to add
+     */
     private void addThread(SocketServerThread thread){
         threads.add(thread);
         clients++;
+        thread.setID(getClientNumber());
     }
 
-    void removeThread(SocketServerThread thread) { threads.remove(thread); }
+    /**
+     * Removes a thread from the list of threads.
+     * @param thread The SocketServerThread to add to the ArrayList
+     */
+    synchronized void removeThread(SocketServerThread thread) { threads.remove(thread); }
 
+
+    /**
+     * Prints a message to all threads(clients) contained in the arraylist.
+     * @param clientInput The message to send to all clients
+     */
     void printToAllClients(String clientInput) {
         System.out.println(clientInput);
         for (SocketServerThread s : threads) {
@@ -31,6 +49,10 @@ public class SocketServer {
         }
     }
 
+    /**
+     * Returns total number of clients served, used to give each thread an ID number.
+     * @return The ID number of the newly spawned thread.
+     */
     private int getClientNumber(){ return clients;}
 
     public static void main(String [] args) {
@@ -38,7 +60,7 @@ public class SocketServer {
         int serverPort = Integer.parseInt(args[0]);
         SocketServer mainServer = new SocketServer();
         ServerSocket serverSocket = null;
-        Socket socket = null;
+        Socket socket;
 
         try{
             System.out.println("Starting server on port " + serverPort + "...");
@@ -53,18 +75,13 @@ public class SocketServer {
 
             try{
                 socket = serverSocket.accept();
-            } catch(IOException e){
-                System.out.println("Error accepting new Client.");
-            }
-
-            try{
                 SocketServerThread serverThread = new SocketServerThread(mainServer, socket);
                 mainServer.addThread(serverThread);
                 serverThread.start();
-                serverThread.setID(mainServer.getClientNumber());
             } catch(IOException e){
-                System.out.println("Error creating new SocketServerThread");
+                System.out.println("Error accepting new client.");
             }
+
         }
 
     }
