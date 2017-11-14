@@ -1,20 +1,111 @@
 package GUI;
 
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Observable;
+import java.util.Observer;
 
 
-public class ChatroomGUI extends Application {
+public class ChatroomGUI extends Application implements Observer{
+    private Stage stage;
+    private Scene chatScene;
+    private SendMessageThread smt;
+
+    /**
+     * Creates the window which users will use to login/register
+     * @return A Scene to be used by the user for login.
+     */
+    private Scene createLoginScene(){
+        VBox userPassBox = new VBox();
+
+        TextField userField = new TextField();
+        userField.setPromptText("Username");
+        HBox usernameArea = new HBox();
+        HBox.setMargin(userField, new Insets(6,12,6,12));
+        usernameArea.getChildren().add(userField);
+
+        PasswordField passField = new PasswordField();
+        passField.setPromptText("Password");
+        HBox passArea = new HBox();
+        HBox.setMargin(passField, new Insets(6,12,6,12));
+        passField.setOnAction(event ->{
+            //If username has no whitespace and username is not empty.
+            if((userField.getText().equals(userField.getText().replaceAll("\\s+","")))
+                    && (!userField.getText().replaceAll("\\s+", "").equals(""))) {
+                smt.send(SocketServer.RETURN_USER);
+                smt.send(userField.getText());
+                smt.send(passField.getText());
+                passField.clear();
+            }
+            else{
+                //Indicate usernames cannot have whitespace in them or be empty
+            }
+        });
+        passArea.getChildren().add(passField);
+
+
+        Button loginButton = new Button("Login");
+        loginButton.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(loginButton, Priority.ALWAYS);
+        HBox.setMargin(loginButton, new Insets(6,12,6,0));
+        loginButton.setOnAction(event ->{
+            //If username has no whitespace and username is not empty.
+            if((userField.getText().equals(userField.getText().replaceAll("\\s+","")))
+                    && (!userField.getText().replaceAll("\\s+", "").equals(""))) {
+                smt.send(SocketServer.RETURN_USER);
+                smt.send(userField.getText());
+                smt.send(passField.getText());
+                passField.clear();
+            }
+            else{
+                //Indicate usernames cannot have whitespace in them or be empty
+            }
+        });
+
+        Button registerButton = new Button("Register");
+        registerButton.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(registerButton, Priority.ALWAYS);
+        HBox.setMargin(registerButton, new Insets(6,12,6,12));
+        registerButton.setOnAction(event ->{
+            //If username has no whitespace and username is not empty.
+            if((userField.getText().equals(userField.getText().replaceAll("\\s+","")))
+                    && (!userField.getText().replaceAll("\\s+", "").equals(""))) {
+                smt.send(SocketServer.NEW_USER);
+                smt.send(userField.getText());
+                smt.send(passField.getText());
+                passField.clear();
+            }
+            else{
+                //Indicate usernames cannot have whitespace in them or be empty
+            }
+        });
+
+        HBox buttonArea = new HBox();
+        buttonArea.getChildren().addAll(registerButton, loginButton);
+
+        userPassBox.getChildren().addAll(usernameArea, passArea);
+        BorderPane pane = new BorderPane();
+        pane.setCenter(userPassBox);
+        pane.setBottom(buttonArea);
+        return new Scene(pane);
+    }
 
     public void start(Stage primaryStage){
+        stage = primaryStage;
 
         //Initialize JavaFX elements used and Socket
         Socket socket = null;
@@ -49,9 +140,12 @@ public class ChatroomGUI extends Application {
         }
 
         //Initialize and start Threads to send and retrieve messages to/from server
-        final ReceiveMessageThread rmt = new ReceiveMessageThread(socket, messageDisplay);
-        final SendMessageThread smt = new SendMessageThread(socket);
-        rmt.start();
+        ReceiveMessageThread rmt = new ReceiveMessageThread(socket, messageDisplay);
+        rmt.addObserver(this);
+        smt = new SendMessageThread(socket);
+        Thread thread = new Thread(rmt);
+        thread.setDaemon(true);
+        thread.start();
         smt.start();
 
 
@@ -59,41 +153,44 @@ public class ChatroomGUI extends Application {
         text.setOnAction(event ->  {
             //Prevents empty messages from being sent
             if(!text.getText().replaceAll("\\s+", "").equals("")){
-                if(smt.isAlive()) {
-                    smt.send(text.getText());
-                    text.clear();
-                }
+                smt.send(text.getText());
+                text.clear();
             }
         });
 
         sendButton.setOnAction(event ->  {
             //Prevents empty messages from being sent
             if(!text.getText().replaceAll("\\s+", "").equals("")) {
-                if (smt.isAlive()) {
-                    smt.send(text.getText());
-                    text.clear();
-                }
+                smt.send(text.getText());
+                text.clear();
             }
         });
 
-        Scene scene = new Scene(pane);
-        primaryStage.setScene(scene);
-        primaryStage.setTitle("Let's chat!");
-        primaryStage.setMinHeight(300);
-        primaryStage.setMinWidth(300);
+
+        chatScene = new Scene(pane);
+        stage.setScene(createLoginScene());
+        stage.setTitle("Let's chat!");
 
         //Tell the SocketServer to close the thread that corresponds to this client
         //and close Send/ReceiveMessageThreads
-        primaryStage.setOnCloseRequest(event -> {
-            smt.send(SocketServer.CLOSE_THREAD_MESSAGE);
-            rmt.close();
+        stage.setOnCloseRequest(event -> {
+            smt.send(SocketServer.CLOSE_THREAD);
             smt.close();
         });
 
-        primaryStage.show();
+        stage.show();
     }
 
     public static void main(String[] args) {
         Application.launch(args);
+    }
+
+    public void update(Observable observable, Object o) {
+        smt.send(SocketServer.SUCCESSFUL_LOGIN);
+        Platform.runLater(() -> {
+            stage.setScene(chatScene);
+            stage.setMinHeight(300);
+            stage.setMinWidth(400);
+        });
     }
 }

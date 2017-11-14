@@ -1,22 +1,24 @@
 package GUI;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.Socket;
+import java.util.Scanner;
+
+import static GUI.SocketServer.NEW_USER;
+import static GUI.SocketServer.RETURN_USER;
 
 public class SocketServerThread extends Thread{
     private SocketServer parentServer;
     private Socket clientSocket;
-    private DataInputStream fromClient;
-    private DataOutputStream toClient;
-    private int ID;
+    private Scanner fromClient;
+    private PrintStream toClient;
 
     SocketServerThread(SocketServer server, Socket socket) throws IOException{
         parentServer = server;
         clientSocket = socket;
-        fromClient = new DataInputStream(clientSocket.getInputStream());
-        toClient = new DataOutputStream(clientSocket.getOutputStream());
+        fromClient = new Scanner(clientSocket.getInputStream());
+        toClient = new PrintStream(clientSocket.getOutputStream());
     }
 
     /**
@@ -24,25 +26,7 @@ public class SocketServerThread extends Thread{
      * @param message The String to send to the client
      */
     void print(String message){
-        try {
-            toClient.writeUTF(message);
-            toClient.flush();
-        } catch (IOException e){}
-    }
-
-    /**
-     * Returns the ID number assigned to this thread's corresponding client.
-     * @return
-     */
-    private int getID(){ return ID;}
-
-
-    /**
-     * Sets the ID number for this thread's corresponding client.
-     * @param newID The int to set as the new ID.
-     */
-    void setID(int newID){
-        ID = newID;
+        toClient.println(message);
     }
 
     /**
@@ -50,18 +34,45 @@ public class SocketServerThread extends Thread{
      */
     public void run() {
         System.out.println("Connected to " + clientSocket.getRemoteSocketAddress());
-        String clientInput = "";
+        String clientInput, pass;
+        String user = null;
+
+        do{
+            clientInput = fromClient.nextLine();
+            switch(clientInput){
+                case NEW_USER:
+                    user = fromClient.nextLine();
+                    pass = fromClient.nextLine();
+                    if(parentServer.storePassword(user, pass))
+                        print(SocketServer.SUCCESSFUL_LOGIN);
+                    else
+                        print(SocketServer.FAILED_LOGIN);
+                    break;
+                case RETURN_USER:
+                    user = fromClient.nextLine();
+                    pass = fromClient.nextLine();
+                    if(parentServer.authenticatePassword(user, pass))
+                        print(SocketServer.SUCCESSFUL_LOGIN);
+                    else
+                        print(SocketServer.FAILED_LOGIN);
+                    break;
+                default:
+                    break;
+            }
+        } while((!clientInput.equals(SocketServer.SUCCESSFUL_LOGIN))
+                && (!clientInput.equals(SocketServer.CLOSE_THREAD)));
+        parentServer.printToAllClients(user + " has connected.");
         try{
-            while(!clientInput.equals(SocketServer.CLOSE_THREAD_MESSAGE)){
-                clientInput = fromClient.readUTF();
-                if(!clientInput.equals(SocketServer.CLOSE_THREAD_MESSAGE))
-                    parentServer.printToAllClients("Anonymous " + getID() + ": " + clientInput);
+            while(!clientInput.equals(SocketServer.CLOSE_THREAD)){
+                clientInput = fromClient.nextLine();
+                if(!clientInput.equals(SocketServer.CLOSE_THREAD))
+                    parentServer.printToAllClients(user + ": " + clientInput);
                 else {
                     print("Closing threads.");
                     clientSocket.close();
 
                     parentServer.removeThread(this);
-                    parentServer.printToAllClients("Anonymous " + getID() + " has disconnected.");
+                    parentServer.printToAllClients(user + " has disconnected.");
                 }
             }
         } catch(IOException e){

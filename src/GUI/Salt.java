@@ -7,14 +7,14 @@ import java.security.SecureRandom;
 import java.util.Base64;
 
 
-public class Salt {
+class Salt {
 
     private final String SALT_ALGORITHM = "SHA1PRNG";
     private final String HASH_ALGORITHM = "MD5";
-    private final int SALT_LENGTH = 32;
+    private final int SEED_LENGTH = 32;
     private File file;
 
-    public Salt(File file){
+    Salt(File file){
         this.file = file;
     }
 
@@ -24,7 +24,7 @@ public class Salt {
      */
     private String generateSalt(){
         try {
-            byte[] salt = SecureRandom.getInstance(SALT_ALGORITHM).generateSeed(SALT_LENGTH);
+            byte[] salt = SecureRandom.getInstance(SALT_ALGORITHM).generateSeed(SEED_LENGTH);
             return Base64.getEncoder().encodeToString(salt);
         } catch (NoSuchAlgorithmException nsa){
             //This should never happen.

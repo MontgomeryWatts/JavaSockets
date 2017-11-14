@@ -1,12 +1,11 @@
 package GUI;
 
-
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.Socket;
 
 public class SendMessageThread extends Thread{
-    private DataOutputStream toServer;
+    private PrintStream toServer;
     private boolean running;
 
     /**
@@ -17,7 +16,7 @@ public class SendMessageThread extends Thread{
     SendMessageThread(Socket s){
         running = true;
         try{
-            toServer = new DataOutputStream(s.getOutputStream());
+            toServer = new PrintStream(s.getOutputStream());
         } catch(IOException e){
             System.out.println("Error constructing SendMessageThread");
         }
@@ -26,20 +25,16 @@ public class SendMessageThread extends Thread{
     /**
      * Used to terminate the loop within run(), or upon an exception being thrown.
      */
-    void close(){ running = false;}
+    void close(){
+        running = false;
+    }
 
     /**
      * Sends a message to the server.
      * @param message The String to send to the server.
      */
     void send(String message) {
-        try {
-            toServer.writeUTF(message);
-            toServer.flush();
-        } catch(IOException e) {
-            System.out.println("Connection to server lost");
-            close();
-        }
+        toServer.println(message);
     }
 
     /**

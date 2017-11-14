@@ -5,10 +5,13 @@ import javafx.scene.control.TextArea;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.NoSuchElementException;
+import java.util.Observable;
+import java.util.Scanner;
 
-public class ReceiveMessageThread extends Thread {
+public class ReceiveMessageThread extends Observable implements Runnable{
 
-    private DataInputStream fromServer;
+    private Scanner fromServer;
     private boolean running;
     private TextArea textArea;
 
@@ -16,12 +19,12 @@ public class ReceiveMessageThread extends Thread {
      * Constructor for ReceiveMessageThread. Used to retrieve messages from
      * the server and append them to the GUI's text area.
      * @param s The socket to communicate on.
-     * @param textArea The GUI to append text to.
+     * @param textArea The text area of the GUI to append text to.
      */
     ReceiveMessageThread(Socket s, TextArea textArea) {
         this.textArea = textArea;
         try {
-            fromServer = new DataInputStream(s.getInputStream());
+            fromServer = new Scanner(s.getInputStream());
             running = true;
         } catch (IOException e) {
             System.out.println("Error constructing ReceiveMessageThread");
@@ -29,24 +32,21 @@ public class ReceiveMessageThread extends Thread {
     }
 
     /**
-     * Used to stop the while loop.
-     */
-    void close() {
-        running = false;
-    }
-
-    /**
      * Checks for messages from the server and appends them to the text area.
      */
     public void run() {
         String message;
+        do{
+            message = fromServer.nextLine();
+        } while(!message.equals(SocketServer.SUCCESSFUL_LOGIN));
+        super.setChanged();
+        super.notifyObservers();
         while (running) {
             try {
-                message = fromServer.readUTF();
+                message = fromServer.nextLine();
                 textArea.appendText(message + "\n");
-            } catch (IOException e) {
-                System.out.println("Connection to server lost.");
-                close();
+            } catch(NoSuchElementException nse){
+                running = false;
             }
         }
     }
