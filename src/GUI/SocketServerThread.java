@@ -14,6 +14,12 @@ public class SocketServerThread extends Thread{
     private Scanner fromClient;
     private PrintStream toClient;
 
+    /**
+     * Creates a SocketServerThread which communicates with clients
+     * @param server The SocketServer this thread belongs to
+     * @param socket The Socket of the incoming client connection
+     * @throws IOException If the SocketServerThread is unable to get I/OStreams from the Socket
+     */
     SocketServerThread(SocketServer server, Socket socket) throws IOException{
         parentServer = server;
         clientSocket = socket;
@@ -37,13 +43,14 @@ public class SocketServerThread extends Thread{
         String clientInput, pass;
         String user = null;
 
+        //Try to register/login the user
         do{
             clientInput = fromClient.nextLine();
             switch(clientInput){
                 case NEW_USER:
                     user = fromClient.nextLine();
                     pass = fromClient.nextLine();
-                    if(parentServer.storePassword(user, pass))
+                    if(parentServer.registerNewUser(user, pass))
                         print(SocketServer.SUCCESSFUL_LOGIN);
                     else
                         print(SocketServer.FAILED_LOGIN);
@@ -61,7 +68,13 @@ public class SocketServerThread extends Thread{
             }
         } while((!clientInput.equals(SocketServer.SUCCESSFUL_LOGIN))
                 && (!clientInput.equals(SocketServer.CLOSE_THREAD)));
-        parentServer.printToAllClients(user + " has connected.");
+
+        //If the user did not close the window
+        if(!clientInput.equals(SocketServer.CLOSE_THREAD)) {
+            System.out.println(clientSocket.getRemoteSocketAddress() + " has logged in as " + user);
+            parentServer.printToAllClients(user + " has connected.");
+        }
+
         try{
             while(!clientInput.equals(SocketServer.CLOSE_THREAD)){
                 clientInput = fromClient.nextLine();

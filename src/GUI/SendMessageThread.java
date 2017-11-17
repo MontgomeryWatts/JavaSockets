@@ -23,7 +23,7 @@ public class SendMessageThread extends Thread{
     }
 
     /**
-     * Used to terminate the loop within run(), or upon an exception being thrown.
+     * Used to terminate the loop within run()
      */
     void close(){
         running = false;

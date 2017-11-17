@@ -18,7 +18,7 @@ public class SocketServer {
 
     /**
      * Constructor for SocketServer. Used to keep track of alive SocketServerThreads and
-     * hand out ID numbers.
+     * authenticate/register users with its Salt.
      */
     private SocketServer(){
         threads = new ArrayList<>();
@@ -74,9 +74,9 @@ public class SocketServer {
      * @param password a String containing the password
      * @return true if the username and hashed password are successfully written to file.
      */
-    boolean storePassword(String username, String password){
+    boolean registerNewUser(String username, String password){
         synchronized (salt) {
-            return salt.storePassword(username, password);
+            return salt.registerNewUser(username, password);
         }
     }
 

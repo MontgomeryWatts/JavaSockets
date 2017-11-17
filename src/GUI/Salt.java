@@ -14,23 +14,46 @@ class Salt {
     private final int SEED_LENGTH = 32;
     private File file;
 
+    /**
+     * Creates a Salt object which refers to a file.
+     * @param file The file where user info will be stored.
+     */
     Salt(File file){
         this.file = file;
     }
 
     /**
-     * Generates a salt to be used for password storage.
-     * @return A salt String to be saved to file for use in password authentication.
+     * Takes in a username and password, and tries to see if the hash of the entered
+     * password matches the hash saved to file.
+     * @param username a String containing the username to look for
+     * @param password a String containing the password
+     * @return true if the entered password hashes to the right value. false if it doesn't, if the
+     * entered username does not exist in the file, or an exception was raised reading from the file.
      */
-    private String generateSalt(){
-        try {
-            byte[] salt = SecureRandom.getInstance(SALT_ALGORITHM).generateSeed(SEED_LENGTH);
-            return Base64.getEncoder().encodeToString(salt);
-        } catch (NoSuchAlgorithmException nsa){
-            //This should never happen.
+    boolean authenticatePassword(String username, String password){
+        try (BufferedReader fileIn = new BufferedReader(new FileReader(file))){
+            String line;
+            while(((line = fileIn.readLine()) != null) && (!line.split(" ")[0].equals(username))) {
+                //Do nothing until you reach EOF or the line containing the username.
+            }
+
+            if(line == null) {
+                System.out.println("Username: " + username + " not in database.");
+                return false;
+            }
+
+            //Username was found
+            else{
+                String[] fields = line.split(" ");
+                String userGeneratedHash = generateHash(fields[1] + password);
+                return userGeneratedHash.equals(fields[2]);
+            }
+        } catch(IOException e){
+            System.out.println("Error authenticating password for " + username);
         }
-        return null;
+        return false;
     }
+
 
     /**
      * Hashes a salted password to save to file for use in password authentication.
@@ -45,6 +68,20 @@ class Salt {
             byte[] hash = md.digest();
             return Base64.getEncoder().encodeToString(hash);
         }catch (NoSuchAlgorithmException nsa){
+            //This should never happen.
+        }
+        return null;
+    }
+
+    /**
+     * Generates a salt to be used for password storage.
+     * @return A salt String to be saved to file for use in password authentication.
+     */
+    private String generateSalt(){
+        try {
+            byte[] salt = SecureRandom.getInstance(SALT_ALGORITHM).generateSeed(SEED_LENGTH);
+            return Base64.getEncoder().encodeToString(salt);
+        } catch (NoSuchAlgorithmException nsa){
             //This should also never happen.
         }
         return null;
@@ -59,7 +96,7 @@ class Salt {
      * @return true if the information is successfully saved to file. false if the username is
      * already contained in the file, or an exception occurs.
      */
-    boolean storePassword(String username, String password){
+    boolean registerNewUser(String username, String password){
         //Without this, one user may have multiple salts and hashes saved to file.
         //However, as-is, a password cannot be changed once it is set.
         if(usernameAlreadyInDatabase(username)){
@@ -67,53 +104,16 @@ class Salt {
             return false;
         }
         else {
-            try {
-                PrintWriter fileOut = new PrintWriter(new FileWriter(file, true));
+            try(PrintWriter fileOut = new PrintWriter(new FileWriter(file))){
                 String salt = generateSalt();
-                fileOut.print(username + " " + salt + " " + generateHash(salt + password) + "\n");
-                fileOut.close();
+                System.out.println("Created new user: " + username);
+                fileOut.println(username + " " + salt + " " + generateHash(salt + password));
                 return true;
-            } catch (IOException e) {
-                System.out.println("Error writing hashed-password to file.");
-                return false;
+            } catch (IOException e){
+                System.out.println("Error creating new entry for user: " + username);
             }
         }
-    }
-
-    /**
-     * Takes in a username and password, and tries to see if the hash of the entered
-     * password matches the hash saved to file.
-     * @param username a String containing the username to look for
-     * @param password a String containing the password
-     * @return true if the entered password hashes to the right value. false if it doesn't, if the
-     * entered username does not exist in the file, or an exception was raised reading from the file.
-     */
-    boolean authenticatePassword(String username, String password){
-        try {
-            BufferedReader fileIn = new BufferedReader(new FileReader(this.file));
-            String line;
-
-            while(((line = fileIn.readLine()) != null) && (!line.split(" ")[0].equals(username))) {
-                //Do nothing until you reach EOF or the line containing the username.
-            }
-
-            if(line == null) {
-                System.out.println("Username not in database.");
-                fileIn.close();
-                return false;
-            }
-
-            //Username was found
-            else{
-                String[] fields = line.split(" ");
-                String userGeneratedHash = generateHash(fields[1] + password);
-                fileIn.close();
-                return userGeneratedHash.equals(fields[2]);
-            }
-        } catch(IOException e){
-            System.out.println("Error reading file.");
-            return false;
-        }
+        return false;
     }
 
     /**
@@ -122,17 +122,20 @@ class Salt {
      * @return true if the username is contained in the file.
      */
     private boolean usernameAlreadyInDatabase(String username){
-        String line = null;
-        try {
-            BufferedReader fileIn = new BufferedReader(new FileReader(this.file));
-
-            while (((line = fileIn.readLine()) != null) && (!line.split(" ")[0].equals(username))) {
-                //Do nothing until you reach EOF or the line containing the username.
-            }
+        String line;
+        boolean found = false;
+        try (BufferedReader fileIn = new BufferedReader(new FileReader(file))){
+            do{
+                line = fileIn.readLine();
+                if(line != null) {
+                    String[] fields = line.split(" ");
+                    if (fields[0].equals(username))
+                        found = true;
+                }
+            } while((!found) && (line != null));
         } catch (IOException e){
             System.out.println("Error reading file.");
         }
-        //If line is still null, there was an exception, or EOF was reached and username was not found.
-        return line != null;
+        return found;
     }
 }
