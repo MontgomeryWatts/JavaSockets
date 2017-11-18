@@ -12,16 +12,18 @@ public class ReceiveMessageThread extends Observable implements Runnable{
 
     private Scanner fromServer;
     private boolean running;
-    private TextArea textArea;
+    private TextArea messageArea;
+    private TextArea peopleOnline;
 
     /**
      * Constructor for ReceiveMessageThread. Used to retrieve messages from
      * the server and append them to the GUI's text area.
      * @param s The socket to communicate on.
-     * @param textArea The text area of the GUI to append text to.
+     * @param messageArea The text area of the GUI to append text to.
      */
-    ReceiveMessageThread(Socket s, TextArea textArea) {
-        this.textArea = textArea;
+    ReceiveMessageThread(Socket s, TextArea messageArea, TextArea peopleOnline) {
+        this.messageArea = messageArea;
+        this.peopleOnline = peopleOnline;
         try {
             fromServer = new Scanner(s.getInputStream());
             running = true;
@@ -43,7 +45,17 @@ public class ReceiveMessageThread extends Observable implements Runnable{
         while (running) {
             try {
                 message = fromServer.nextLine();
-                textArea.appendText(message + "\n");
+                String[] fields = message.split(" ");
+                if(fields[0].equals(SocketServer.USER_ONLINE))
+                    peopleOnline.appendText(fields[1] + "\n");
+                else if (fields[0].equals(SocketServer.USER_OFFLINE)){
+                    String newText = peopleOnline.getText();
+                    peopleOnline.clear();
+                    newText = newText.replaceAll(fields[1] + "\n", "");
+                    peopleOnline.appendText(newText);
+                }
+                else
+                    messageArea.appendText(message + "\n");
             } catch(NoSuchElementException nse){
                 running = false;
             }

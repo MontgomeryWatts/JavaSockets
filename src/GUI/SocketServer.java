@@ -12,6 +12,8 @@ public class SocketServer {
     static final String RETURN_USER = "f9UBEmUBoHH6xsGq8cF4/k5cDLO3xEtdlAGPJun5+wE=";
     static final String SUCCESSFUL_LOGIN ="7KZMblCjkjk7z42pv/bkmplzJ+Frjcny/dtdZZ8FOiM=";
     static final String FAILED_LOGIN = "446ASQ8QfXr1p/LaUrDwnFyV494dp1Prjlvneh0qVwA=";
+    static final String USER_ONLINE = "CY9rzUYh03PK3k6DJie09gASQ8LO3xEtdln5EZl=";
+    static final String USER_OFFLINE = "1isut5mzYdfl8gRsG66p+gKZ#1GRcs%$2/3c=";
     private final File LOGIN_INFO_FILE = new File("logininfo.txt");
     private ArrayList<SocketServerThread> threads;
     private Salt salt;
@@ -29,9 +31,10 @@ public class SocketServer {
      * Adds a SocketServerThread to the list of threads, and gives it an ID number.
      * @param thread The SocketServerThread to add
      */
-    private void addThread(SocketServerThread thread){
+    void addThread(SocketServerThread thread){
         synchronized (threads) {
             threads.add(thread);
+            printToAllClients(USER_ONLINE + " " + thread.getUsername());
         }
     }
 
@@ -52,7 +55,9 @@ public class SocketServer {
      * @param clientInput The message to send to all clients
      */
     void printToAllClients(String clientInput) {
-        System.out.println(clientInput);
+        String[] fields = clientInput.split(" ");
+        if ((!fields[0].equals(USER_ONLINE)) && (!fields[0].equals(USER_OFFLINE)))
+            System.out.println(clientInput);
         for (SocketServerThread s : threads) {
             s.print(clientInput);
         }
@@ -65,6 +70,7 @@ public class SocketServer {
     void removeThread(SocketServerThread thread) {
         synchronized (threads) {
             threads.remove(thread);
+            printToAllClients(USER_OFFLINE + " " + thread.getUsername());
         }
     }
 
@@ -96,12 +102,12 @@ public class SocketServer {
         }
 
         System.out.println("Server started successfully.");
+
         while(true){
 
             try{
                 socket = serverSocket.accept();
                 SocketServerThread serverThread = new SocketServerThread(mainServer, socket);
-                mainServer.addThread(serverThread);
                 serverThread.start();
             } catch(IOException e){
                 System.out.println("Error accepting new client.");

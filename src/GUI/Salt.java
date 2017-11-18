@@ -104,7 +104,7 @@ class Salt {
             return false;
         }
         else {
-            try(PrintWriter fileOut = new PrintWriter(new FileWriter(file))){
+            try(PrintWriter fileOut = new PrintWriter(new FileWriter(file, true))){
                 String salt = generateSalt();
                 System.out.println("Created new user: " + username);
                 fileOut.println(username + " " + salt + " " + generateHash(salt + password));

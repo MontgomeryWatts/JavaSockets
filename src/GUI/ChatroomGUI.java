@@ -114,8 +114,9 @@ public class ChatroomGUI extends Application implements Observer{
         messageDisplay.setEditable(false);
 
         TextArea peopleOnline = new TextArea();
+        peopleOnline.appendText("Users online:\n");
         peopleOnline.setEditable(false);
-        peopleOnline.setPrefWidth(100);
+        peopleOnline.setPrefWidth(150);
 
         TextField text = new TextField();
         text.setPromptText("Enter messages here!");
@@ -140,7 +141,7 @@ public class ChatroomGUI extends Application implements Observer{
         }
 
         //Initialize and start Threads to send and retrieve messages to/from server
-        ReceiveMessageThread rmt = new ReceiveMessageThread(socket, messageDisplay);
+        ReceiveMessageThread rmt = new ReceiveMessageThread(socket, messageDisplay, peopleOnline);
         rmt.addObserver(this);
         smt = new SendMessageThread(socket);
         Thread thread = new Thread(rmt);

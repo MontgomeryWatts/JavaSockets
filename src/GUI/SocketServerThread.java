@@ -13,6 +13,7 @@ public class SocketServerThread extends Thread{
     private Socket clientSocket;
     private Scanner fromClient;
     private PrintStream toClient;
+    private String username;
 
     /**
      * Creates a SocketServerThread which communicates with clients
@@ -25,6 +26,10 @@ public class SocketServerThread extends Thread{
         clientSocket = socket;
         fromClient = new Scanner(clientSocket.getInputStream());
         toClient = new PrintStream(clientSocket.getOutputStream());
+    }
+
+    String getUsername(){
+        return username;
     }
 
     /**
@@ -41,24 +46,23 @@ public class SocketServerThread extends Thread{
     public void run() {
         System.out.println("Connected to " + clientSocket.getRemoteSocketAddress());
         String clientInput, pass;
-        String user = null;
 
         //Try to register/login the user
         do{
             clientInput = fromClient.nextLine();
             switch(clientInput){
                 case NEW_USER:
-                    user = fromClient.nextLine();
+                    username = fromClient.nextLine();
                     pass = fromClient.nextLine();
-                    if(parentServer.registerNewUser(user, pass))
+                    if(parentServer.registerNewUser(username, pass))
                         print(SocketServer.SUCCESSFUL_LOGIN);
                     else
                         print(SocketServer.FAILED_LOGIN);
                     break;
                 case RETURN_USER:
-                    user = fromClient.nextLine();
+                    username = fromClient.nextLine();
                     pass = fromClient.nextLine();
-                    if(parentServer.authenticatePassword(user, pass))
+                    if(parentServer.authenticatePassword(username, pass))
                         print(SocketServer.SUCCESSFUL_LOGIN);
                     else
                         print(SocketServer.FAILED_LOGIN);
@@ -71,25 +75,24 @@ public class SocketServerThread extends Thread{
 
         //If the user did not close the window
         if(!clientInput.equals(SocketServer.CLOSE_THREAD)) {
-            System.out.println(clientSocket.getRemoteSocketAddress() + " has logged in as " + user);
-            parentServer.printToAllClients(user + " has connected.");
+            parentServer.addThread(this);
+            System.out.println(clientSocket.getRemoteSocketAddress() + " has logged in as " + username);
+            parentServer.printToAllClients(username + " has connected.");
         }
 
         try{
             while(!clientInput.equals(SocketServer.CLOSE_THREAD)){
                 clientInput = fromClient.nextLine();
-                if(!clientInput.equals(SocketServer.CLOSE_THREAD))
-                    parentServer.printToAllClients(user + ": " + clientInput);
-                else {
-                    print("Closing threads.");
+                if(clientInput.equals(SocketServer.CLOSE_THREAD)) {
                     clientSocket.close();
-
                     parentServer.removeThread(this);
-                    parentServer.printToAllClients(user + " has disconnected.");
-                }
+                    parentServer.printToAllClients(username + " has disconnected.");
+                } else
+                    parentServer.printToAllClients(username + ": " + clientInput);
             }
         } catch(IOException e){
             System.out.println("Client disconnected unexpectedly.");
+            parentServer.removeThread(this);
         }
     }
 }
