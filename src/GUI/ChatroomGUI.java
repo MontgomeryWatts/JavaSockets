@@ -4,20 +4,17 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
-import java.io.IOException;
 import java.net.Socket;
 import java.util.Observable;
 import java.util.Observer;
+
+import static java.lang.Thread.sleep;
 
 
 public class ChatroomGUI extends Application implements Observer{
@@ -30,14 +27,15 @@ public class ChatroomGUI extends Application implements Observer{
      * @return A Scene to be used by the user for login.
      */
     private Scene createLoginScene(){
-        VBox userPassBox = new VBox();
 
+        VBox userPassBox = new VBox();
         TextField userField = new TextField();
         userField.setPromptText("Username");
         HBox usernameArea = new HBox();
         HBox.setMargin(userField, new Insets(6,12,6,12));
         usernameArea.getChildren().add(userField);
 
+        //Initialize PasswordField, set an action where it will send a login request to the server when enter is pressed
         PasswordField passField = new PasswordField();
         passField.setPromptText("Password");
         HBox passArea = new HBox();
@@ -57,7 +55,10 @@ public class ChatroomGUI extends Application implements Observer{
         });
         passArea.getChildren().add(passField);
 
+        //Now that passField is initialized, when enter is pressed in userField, switch to passField
+        userField.setOnAction(event -> passField.requestFocus());
 
+        //Create a button that will also send a login request to server
         Button loginButton = new Button("Login");
         loginButton.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(loginButton, Priority.ALWAYS);
@@ -76,6 +77,7 @@ public class ChatroomGUI extends Application implements Observer{
             }
         });
 
+        //Create a button that will inform the server a new user should be created
         Button registerButton = new Button("Register");
         registerButton.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(registerButton, Priority.ALWAYS);
@@ -102,6 +104,21 @@ public class ChatroomGUI extends Application implements Observer{
         pane.setCenter(userPassBox);
         pane.setBottom(buttonArea);
         return new Scene(pane);
+    }
+
+    /**
+     * Called when the ReceieveMessageThread receives SUCCESSFUL_LOGIN from the server.
+     * Switches the scene to the main chat window.
+     * @param observable The ReceiveMessageThread, not directly used.
+     * @param o  Not used.
+     */
+    public void update(Observable observable, Object o) {
+        smt.send(SocketServer.SUCCESSFUL_LOGIN);
+        Platform.runLater(() -> {
+            stage.setScene(chatScene);
+            stage.setMinHeight(300);
+            stage.setMinWidth(400);
+        });
     }
 
     public void start(Stage primaryStage){
@@ -136,7 +153,8 @@ public class ChatroomGUI extends Application implements Observer{
         //Try to create a socket to communicate on
         try {
             socket = new Socket("127.0.0.1", 6000);
-        } catch(IOException e){
+            sleep(1000);
+        } catch(Exception e){
             System.exit(1);
         }
 
@@ -173,7 +191,7 @@ public class ChatroomGUI extends Application implements Observer{
         stage.setTitle("Let's chat!");
 
         //Tell the SocketServer to close the thread that corresponds to this client
-        //and close Send/ReceiveMessageThreads
+        //and close SendMessageThread
         stage.setOnCloseRequest(event -> {
             smt.send(SocketServer.CLOSE_THREAD);
             smt.close();
@@ -184,14 +202,5 @@ public class ChatroomGUI extends Application implements Observer{
 
     public static void main(String[] args) {
         Application.launch(args);
-    }
-
-    public void update(Observable observable, Object o) {
-        smt.send(SocketServer.SUCCESSFUL_LOGIN);
-        Platform.runLater(() -> {
-            stage.setScene(chatScene);
-            stage.setMinHeight(300);
-            stage.setMinWidth(400);
-        });
     }
 }

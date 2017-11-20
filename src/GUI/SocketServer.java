@@ -51,6 +51,17 @@ public class SocketServer {
     }
 
     /**
+     * Tells the SocketServerThread calling this method what other users are online.
+     * @param thread The calling SocketServerThread.
+     */
+    void getAllUsers(SocketServerThread thread){
+        synchronized (threads){
+            for(SocketServerThread user: threads)
+                thread.print(USER_ONLINE + " " + user.getUsername());
+        }
+    }
+
+    /**
      * Prints a message to all threads(clients) contained in the arraylist.
      * @param clientInput The message to send to all clients
      */
@@ -83,6 +94,16 @@ public class SocketServer {
     boolean registerNewUser(String username, String password){
         synchronized (salt) {
             return salt.registerNewUser(username, password);
+        }
+    }
+
+    boolean userAlreadyOnline(String username){
+        synchronized (threads){
+            for(SocketServerThread thread: threads){
+                if(thread.getUsername().equals(username))
+                    return true;
+            }
+            return false;
         }
     }
 

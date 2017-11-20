@@ -19,13 +19,14 @@ public class ReceiveMessageThread extends Observable implements Runnable{
      * Constructor for ReceiveMessageThread. Used to retrieve messages from
      * the server and append them to the GUI's text area.
      * @param s The socket to communicate on.
-     * @param messageArea The text area of the GUI to append text to.
+     * @param messageArea The text area of the GUI to append messages to.
+     * @param peopleOnline The text area of the GUI to append usernames to.
      */
     ReceiveMessageThread(Socket s, TextArea messageArea, TextArea peopleOnline) {
         this.messageArea = messageArea;
         this.peopleOnline = peopleOnline;
         try {
-            fromServer = new Scanner(s.getInputStream());
+            fromServer = new Scanner(s.getInputStream(), "utf-8");
             running = true;
         } catch (IOException e) {
             System.out.println("Error constructing ReceiveMessageThread");
