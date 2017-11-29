@@ -24,10 +24,14 @@ public class SocketServerThread extends Thread{
     SocketServerThread(SocketServer server, Socket socket) throws IOException{
         parentServer = server;
         clientSocket = socket;
-        fromClient = new Scanner(clientSocket.getInputStream());
+        fromClient = new Scanner(clientSocket.getInputStream(), "utf-8");
         toClient = new PrintStream(clientSocket.getOutputStream());
     }
 
+    /**
+     * Returns the username of the client associated with this thread
+     * @return String of the username
+     */
     String getUsername(){
         return username;
     }
@@ -62,7 +66,7 @@ public class SocketServerThread extends Thread{
                 case RETURN_USER:
                     username = fromClient.nextLine();
                     pass = fromClient.nextLine();
-                    if(parentServer.authenticatePassword(username, pass))
+                    if((parentServer.authenticatePassword(username, pass)) && (!parentServer.userAlreadyOnline(username)))
                         print(SocketServer.SUCCESSFUL_LOGIN);
                     else
                         print(SocketServer.FAILED_LOGIN);
@@ -75,6 +79,7 @@ public class SocketServerThread extends Thread{
 
         //If the user did not close the window
         if(!clientInput.equals(SocketServer.CLOSE_THREAD)) {
+            parentServer.getAllUsers(this);
             parentServer.addThread(this);
             System.out.println(clientSocket.getRemoteSocketAddress() + " has logged in as " + username);
             parentServer.printToAllClients(username + " has connected.");
