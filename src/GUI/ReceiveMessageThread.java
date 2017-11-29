@@ -8,6 +8,8 @@ import java.util.NoSuchElementException;
 import java.util.Observable;
 import java.util.Scanner;
 
+import static GUI.CommunicationProtocol.*;
+
 public class ReceiveMessageThread extends Observable implements Runnable{
 
     private Scanner fromServer;
@@ -40,16 +42,16 @@ public class ReceiveMessageThread extends Observable implements Runnable{
         String message;
         do{
             message = fromServer.nextLine();
-        } while(!message.equals(SocketServer.SUCCESSFUL_LOGIN));
+        } while(!message.equals(SUCCESSFUL_LOGIN));
         super.setChanged();
         super.notifyObservers();
         while (running) {
             try {
                 message = fromServer.nextLine();
                 String[] fields = message.split(" ");
-                if(fields[0].equals(SocketServer.USER_ONLINE))
+                if(fields[0].equals(USER_ONLINE))
                     peopleOnline.appendText(fields[1] + "\n");
-                else if (fields[0].equals(SocketServer.USER_OFFLINE)){
+                else if (fields[0].equals(USER_OFFLINE)){
                     String newText = peopleOnline.getText();
                     peopleOnline.clear();
                     newText = newText.replaceAll(fields[1] + "\n", "");

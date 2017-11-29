@@ -5,8 +5,8 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.util.Scanner;
 
-import static GUI.SocketServer.NEW_USER;
-import static GUI.SocketServer.RETURN_USER;
+import static GUI.CommunicationProtocol.*;
+
 
 public class SocketServerThread extends Thread{
     private SocketServer parentServer;
@@ -59,26 +59,26 @@ public class SocketServerThread extends Thread{
                     username = fromClient.nextLine();
                     pass = fromClient.nextLine();
                     if(parentServer.registerNewUser(username, pass))
-                        print(SocketServer.SUCCESSFUL_LOGIN);
+                        print(SUCCESSFUL_LOGIN);
                     else
-                        print(SocketServer.FAILED_LOGIN);
+                        print(FAILED_LOGIN);
                     break;
                 case RETURN_USER:
                     username = fromClient.nextLine();
                     pass = fromClient.nextLine();
                     if((parentServer.authenticatePassword(username, pass)) && (!parentServer.userAlreadyOnline(username)))
-                        print(SocketServer.SUCCESSFUL_LOGIN);
+                        print(SUCCESSFUL_LOGIN);
                     else
-                        print(SocketServer.FAILED_LOGIN);
+                        print(FAILED_LOGIN);
                     break;
                 default:
                     break;
             }
-        } while((!clientInput.equals(SocketServer.SUCCESSFUL_LOGIN))
-                && (!clientInput.equals(SocketServer.CLOSE_THREAD)));
+        } while((!clientInput.equals(SUCCESSFUL_LOGIN))
+                && (!clientInput.equals(CLOSE_THREAD)));
 
         //If the user did not close the window
-        if(!clientInput.equals(SocketServer.CLOSE_THREAD)) {
+        if(!clientInput.equals(CLOSE_THREAD)) {
             parentServer.getAllUsers(this);
             parentServer.addThread(this);
             System.out.println(clientSocket.getRemoteSocketAddress() + " has logged in as " + username);
@@ -86,9 +86,9 @@ public class SocketServerThread extends Thread{
         }
 
         try{
-            while(!clientInput.equals(SocketServer.CLOSE_THREAD)){
+            while(!clientInput.equals(CLOSE_THREAD)){
                 clientInput = fromClient.nextLine();
-                if(clientInput.equals(SocketServer.CLOSE_THREAD)) {
+                if(clientInput.equals(CLOSE_THREAD)) {
                     clientSocket.close();
                     parentServer.removeThread(this);
                     parentServer.printToAllClients(username + " has disconnected.");

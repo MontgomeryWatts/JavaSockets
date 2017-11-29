@@ -6,14 +6,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import static GUI.CommunicationProtocol.USER_OFFLINE;
+import static GUI.CommunicationProtocol.USER_ONLINE;
+
 public class SocketServer {
-    static final String CLOSE_THREAD = "k95NwPKr3H6AE4ejdaZmYBzvkw6OzjV/m7cahLVhWZs=";
-    static final String NEW_USER = "PLCWEZlGvRJiyG7aLKLX7TxFfzKa2/sfdJl5w0PoF+Y=";
-    static final String RETURN_USER = "f9UBEmUBoHH6xsGq8cF4/k5cDLO3xEtdlAGPJun5+wE=";
-    static final String SUCCESSFUL_LOGIN ="7KZMblCjkjk7z42pv/bkmplzJ+Frjcny/dtdZZ8FOiM=";
-    static final String FAILED_LOGIN = "446ASQ8QfXr1p/LaUrDwnFyV494dp1Prjlvneh0qVwA=";
-    static final String USER_ONLINE = "CY9rzUYh03PK3k6DJie09gASQ8LO3xEtdln5EZl=";
-    static final String USER_OFFLINE = "1isut5mzYdfl8gRsG66p+gKZ#1GRcs%$2/3c=";
     private final File LOGIN_INFO_FILE = new File("logininfo.txt");
     private ArrayList<SocketServerThread> threads;
     private Salt salt;

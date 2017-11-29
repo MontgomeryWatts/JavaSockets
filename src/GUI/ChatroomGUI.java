@@ -14,6 +14,7 @@ import java.net.Socket;
 import java.util.Observable;
 import java.util.Observer;
 
+import static GUI.CommunicationProtocol.*;
 import static java.lang.Thread.sleep;
 
 
@@ -44,7 +45,7 @@ public class ChatroomGUI extends Application implements Observer{
             //If username has no whitespace and username is not empty.
             if((userField.getText().equals(userField.getText().replaceAll("\\s+","")))
                     && (!userField.getText().replaceAll("\\s+", "").equals(""))) {
-                smt.send(SocketServer.RETURN_USER);
+                smt.send(RETURN_USER);
                 smt.send(userField.getText());
                 smt.send(passField.getText());
                 passField.clear();
@@ -67,7 +68,7 @@ public class ChatroomGUI extends Application implements Observer{
             //If username has no whitespace and username is not empty.
             if((userField.getText().equals(userField.getText().replaceAll("\\s+","")))
                     && (!userField.getText().replaceAll("\\s+", "").equals(""))) {
-                smt.send(SocketServer.RETURN_USER);
+                smt.send(RETURN_USER);
                 smt.send(userField.getText());
                 smt.send(passField.getText());
                 passField.clear();
@@ -86,7 +87,7 @@ public class ChatroomGUI extends Application implements Observer{
             //If username has no whitespace and username is not empty.
             if((userField.getText().equals(userField.getText().replaceAll("\\s+","")))
                     && (!userField.getText().replaceAll("\\s+", "").equals(""))) {
-                smt.send(SocketServer.NEW_USER);
+                smt.send(NEW_USER);
                 smt.send(userField.getText());
                 smt.send(passField.getText());
                 passField.clear();
@@ -113,7 +114,7 @@ public class ChatroomGUI extends Application implements Observer{
      * @param o  Not used.
      */
     public void update(Observable observable, Object o) {
-        smt.send(SocketServer.SUCCESSFUL_LOGIN);
+        smt.send(SUCCESSFUL_LOGIN);
         Platform.runLater(() -> {
             stage.setScene(chatScene);
             stage.setMinHeight(300);
@@ -193,7 +194,7 @@ public class ChatroomGUI extends Application implements Observer{
         //Tell the SocketServer to close the thread that corresponds to this client
         //and close SendMessageThread
         stage.setOnCloseRequest(event -> {
-            smt.send(SocketServer.CLOSE_THREAD);
+            smt.send(CLOSE_THREAD);
             smt.close();
         });
 
