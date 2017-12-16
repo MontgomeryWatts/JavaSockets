@@ -54,25 +54,21 @@ public class SocketServerThread extends Thread{
         //Try to register/login the user
         do{
             clientInput = fromClient.nextLine();
-            switch(clientInput){
-                case NEW_USER:
-                    username = fromClient.nextLine();
-                    pass = fromClient.nextLine();
-                    if(parentServer.registerNewUser(username, pass))
-                        print(SUCCESSFUL_LOGIN);
-                    else
-                        print(FAILED_LOGIN);
-                    break;
-                case RETURN_USER:
-                    username = fromClient.nextLine();
-                    pass = fromClient.nextLine();
-                    if((parentServer.authenticatePassword(username, pass)) && (!parentServer.userAlreadyOnline(username)))
-                        print(SUCCESSFUL_LOGIN);
-                    else
-                        print(FAILED_LOGIN);
-                    break;
-                default:
-                    break;
+            if(clientInput.equals(NEW_USER)) {
+                username = fromClient.nextLine();
+                pass = fromClient.nextLine();
+                if (parentServer.registerNewUser(username, pass))
+                    print(SUCCESSFUL_LOGIN);
+                else
+                    print(FAILED_LOGIN);
+            }
+            else if (clientInput.equals(RETURN_USER)){
+                username = fromClient.nextLine();
+                pass = fromClient.nextLine();
+                if((parentServer.authenticatePassword(username, pass)) && (!parentServer.userAlreadyOnline(username)))
+                    print(SUCCESSFUL_LOGIN);
+                else
+                    print(FAILED_LOGIN);
             }
         } while((!clientInput.equals(SUCCESSFUL_LOGIN))
                 && (!clientInput.equals(CLOSE_THREAD)));

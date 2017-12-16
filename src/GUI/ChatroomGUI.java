@@ -22,6 +22,7 @@ public class ChatroomGUI extends Application implements Observer{
     private Stage stage;
     private Scene chatScene;
     private SendMessageThread smt;
+    private TextField text;
 
     /**
      * Creates the window which users will use to login/register
@@ -108,20 +109,20 @@ public class ChatroomGUI extends Application implements Observer{
     }
 
     /**
-     * Called when the ReceieveMessageThread receives SUCCESSFUL_LOGIN from the server.
-     * Switches the scene to the main chat window.
-     * @param observable The ReceiveMessageThread, not directly used.
-     * @param o  Not used.
+     * Gets the text from the TextField and sends it through the SendMessageThread.
      */
-    public void update(Observable observable, Object o) {
-        smt.send(SUCCESSFUL_LOGIN);
-        Platform.runLater(() -> {
-            stage.setScene(chatScene);
-            stage.setMinHeight(300);
-            stage.setMinWidth(400);
-        });
+    private void sendMessageEvent(){
+        //Prevents empty messages from being sent
+        if(!text.getText().replaceAll("\\s+", "").equals("")){
+            smt.send(text.getText());
+            text.clear();
+        }
     }
 
+    /**
+     * Creates everything for the JavaFX window.
+     * @param primaryStage the JavaFX stage
+     */
     public void start(Stage primaryStage){
         stage = primaryStage;
 
@@ -136,7 +137,7 @@ public class ChatroomGUI extends Application implements Observer{
         peopleOnline.setEditable(false);
         peopleOnline.setPrefWidth(150);
 
-        TextField text = new TextField();
+        text = new TextField();
         text.setPromptText("Enter messages here!");
 
         Button sendButton = new Button("Send");
@@ -170,21 +171,8 @@ public class ChatroomGUI extends Application implements Observer{
 
 
         //Set actions for TextField and Button to send text
-        text.setOnAction(event ->  {
-            //Prevents empty messages from being sent
-            if(!text.getText().replaceAll("\\s+", "").equals("")){
-                smt.send(text.getText());
-                text.clear();
-            }
-        });
-
-        sendButton.setOnAction(event ->  {
-            //Prevents empty messages from being sent
-            if(!text.getText().replaceAll("\\s+", "").equals("")) {
-                smt.send(text.getText());
-                text.clear();
-            }
-        });
+        text.setOnAction(event ->  sendMessageEvent());
+        sendButton.setOnAction(event -> sendMessageEvent());
 
 
         chatScene = new Scene(pane);
@@ -199,6 +187,21 @@ public class ChatroomGUI extends Application implements Observer{
         });
 
         stage.show();
+    }
+
+    /**
+     * Called when the ReceieveMessageThread receives SUCCESSFUL_LOGIN from the server.
+     * Switches the scene to the main chat window.
+     * @param observable The ReceiveMessageThread, not directly used.
+     * @param o  Not used.
+     */
+    public void update(Observable observable, Object o) {
+        smt.send(SUCCESSFUL_LOGIN);
+        Platform.runLater(() -> {
+            stage.setScene(chatScene);
+            stage.setMinHeight(300);
+            stage.setMinWidth(400);
+        });
     }
 
     public static void main(String[] args) {

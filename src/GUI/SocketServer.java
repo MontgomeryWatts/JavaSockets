@@ -93,6 +93,11 @@ public class SocketServer {
         }
     }
 
+    /**
+     * Returns true if the given username is online
+     * @param username String containing the username to search for
+     * @return true if the user is online
+     */
     boolean userAlreadyOnline(String username){
         synchronized (threads){
             for(SocketServerThread thread: threads){
