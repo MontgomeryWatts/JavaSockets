@@ -92,8 +92,9 @@ public class SocketServerThread extends Thread{
                     parentServer.printToAllClients(username + ": " + clientInput);
             }
         } catch(IOException e){
-            System.out.println("Client disconnected unexpectedly.");
             parentServer.removeThread(this);
         }
+
+        System.out.println(clientSocket.getRemoteSocketAddress() + " has logged off as " + username);
     }
 }

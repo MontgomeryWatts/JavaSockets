@@ -23,6 +23,8 @@ public class ChatroomGUI extends Application implements Observer{
     private Scene chatScene;
     private SendMessageThread smt;
     private TextField text;
+    private TextField userField;
+    private PasswordField passField;
 
     /**
      * Creates the window which users will use to login/register
@@ -31,33 +33,19 @@ public class ChatroomGUI extends Application implements Observer{
     private Scene createLoginScene(){
 
         VBox userPassBox = new VBox();
-        TextField userField = new TextField();
+        userField = new TextField();
         userField.setPromptText("Username");
         HBox usernameArea = new HBox();
         HBox.setMargin(userField, new Insets(6,12,6,12));
         usernameArea.getChildren().add(userField);
 
         //Initialize PasswordField, set an action where it will send a login request to the server when enter is pressed
-        PasswordField passField = new PasswordField();
+        passField = new PasswordField();
         passField.setPromptText("Password");
         HBox passArea = new HBox();
         HBox.setMargin(passField, new Insets(6,12,6,12));
-        passField.setOnAction(event ->{
-            //If username has no whitespace and username is not empty.
-            if((userField.getText().equals(userField.getText().replaceAll("\\s+","")))
-                    && (!userField.getText().replaceAll("\\s+", "").equals(""))) {
-                smt.send(RETURN_USER);
-                smt.send(userField.getText());
-                smt.send(passField.getText());
-                passField.clear();
-            }
-            else{
-                //Indicate usernames cannot have whitespace in them or be empty
-            }
-        });
+        passField.setOnAction(event -> sendUserInfoEvent(RETURN_USER));
         passArea.getChildren().add(passField);
-
-        //Now that passField is initialized, when enter is pressed in userField, switch to passField
         userField.setOnAction(event -> passField.requestFocus());
 
         //Create a button that will also send a login request to server
@@ -65,38 +53,14 @@ public class ChatroomGUI extends Application implements Observer{
         loginButton.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(loginButton, Priority.ALWAYS);
         HBox.setMargin(loginButton, new Insets(6,12,6,0));
-        loginButton.setOnAction(event ->{
-            //If username has no whitespace and username is not empty.
-            if((userField.getText().equals(userField.getText().replaceAll("\\s+","")))
-                    && (!userField.getText().replaceAll("\\s+", "").equals(""))) {
-                smt.send(RETURN_USER);
-                smt.send(userField.getText());
-                smt.send(passField.getText());
-                passField.clear();
-            }
-            else{
-                //Indicate usernames cannot have whitespace in them or be empty
-            }
-        });
+        loginButton.setOnAction(event -> sendUserInfoEvent(RETURN_USER));
 
         //Create a button that will inform the server a new user should be created
         Button registerButton = new Button("Register");
         registerButton.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(registerButton, Priority.ALWAYS);
         HBox.setMargin(registerButton, new Insets(6,12,6,12));
-        registerButton.setOnAction(event ->{
-            //If username has no whitespace and username is not empty.
-            if((userField.getText().equals(userField.getText().replaceAll("\\s+","")))
-                    && (!userField.getText().replaceAll("\\s+", "").equals(""))) {
-                smt.send(NEW_USER);
-                smt.send(userField.getText());
-                smt.send(passField.getText());
-                passField.clear();
-            }
-            else{
-                //Indicate usernames cannot have whitespace in them or be empty
-            }
-        });
+        registerButton.setOnAction(event -> sendUserInfoEvent(NEW_USER));
 
         HBox buttonArea = new HBox();
         buttonArea.getChildren().addAll(registerButton, loginButton);
@@ -109,7 +73,7 @@ public class ChatroomGUI extends Application implements Observer{
     }
 
     /**
-     * Gets the text from the TextField and sends it through the SendMessageThread.
+     * Gets the text input by the user and sends it through the SendMessageThread.
      */
     private void sendMessageEvent(){
         //Prevents empty messages from being sent
@@ -119,6 +83,29 @@ public class ChatroomGUI extends Application implements Observer{
         }
     }
 
+    /**
+     * Used when attempting to login/register a new account. Sends username
+     * and password to the server to see if it is correct/register.
+     * @param type String representing if a login/register is being made.
+     */
+    private void sendUserInfoEvent(String type){
+        //If username has no whitespace and username is not empty.
+        if((userField.getText().equals(userField.getText().replaceAll("\\s+","")))
+                && (!userField.getText().replaceAll("\\s+", "").equals(""))) {
+            smt.send(type);
+            smt.send(userField.getText());
+            smt.send(passField.getText());
+            passField.clear();
+        }
+        else{
+            //Indicate usernames cannot have whitespace in them or be empty
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Warning bucko!");
+            alert.setHeaderText(null);
+            alert.setContentText("Your username either has whitespace in it or was left empty.");
+            alert.showAndWait();
+        }
+    }
     /**
      * Creates everything for the JavaFX window.
      * @param primaryStage the JavaFX stage

@@ -60,6 +60,8 @@ public class ReceiveMessageThread extends Observable implements Runnable{
                 else
                     messageArea.appendText(message + "\n");
             } catch(NoSuchElementException nse){
+                //This will always be thrown once client
+                //closes the window so used to end RMT.
                 running = false;
             }
         }
