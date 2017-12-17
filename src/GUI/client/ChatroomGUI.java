@@ -1,4 +1,4 @@
-package GUI;
+package GUI.client;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -73,6 +73,20 @@ public class ChatroomGUI extends Application implements Observer{
     }
 
     /**
+     * Prevents user from creating a username with non alphanumeric characters.
+     * @param username The username to check
+     * @return true if there are only alphanumeric characters.
+     */
+    private boolean isValidUsername(String username){
+        char[] nameAsArray = username.toCharArray();
+        for(int i = 0; i < nameAsArray.length; i++) {
+            if(!Character.isLetterOrDigit(nameAsArray[i]))
+                return false;
+        }
+        return true;
+    }
+
+    /**
      * Gets the text input by the user and sends it through the SendMessageThread.
      */
     private void sendMessageEvent(){
@@ -89,11 +103,13 @@ public class ChatroomGUI extends Application implements Observer{
      * @param type String representing if a login/register is being made.
      */
     private void sendUserInfoEvent(String type){
+        String username = userField.getText();
         //If username has no whitespace and username is not empty.
-        if((userField.getText().equals(userField.getText().replaceAll("\\s+","")))
-                && (!userField.getText().replaceAll("\\s+", "").equals(""))) {
+        if((username.equals(username.replaceAll("\\s+","")))
+                && (!username.replaceAll("\\s+", "").equals(""))
+                && (isValidUsername(username))){
             smt.send(type);
-            smt.send(userField.getText());
+            smt.send(username);
             smt.send(passField.getText());
             passField.clear();
         }
@@ -102,7 +118,8 @@ public class ChatroomGUI extends Application implements Observer{
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Warning bucko!");
             alert.setHeaderText(null);
-            alert.setContentText("Your username either has whitespace in it or was left empty.");
+            alert.setContentText("Your username either contains whitespace, non-alphanumeric" +
+                    " characters, or was left empty.");
             alert.showAndWait();
         }
     }

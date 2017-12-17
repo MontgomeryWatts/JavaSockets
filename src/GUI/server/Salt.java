@@ -1,4 +1,4 @@
-package GUI;
+package GUI.server;
 
 import java.io.*;
 import java.security.MessageDigest;
