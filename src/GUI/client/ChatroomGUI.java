@@ -92,8 +92,8 @@ public class ChatroomGUI extends Application implements Observer{
     private void sendMessageEvent(){
         //Prevents empty messages from being sent
         if(!text.getText().replaceAll("\\s+", "").equals("")){
-            smt.send(text.getText());
-            text.clear();
+            if(smt.send(text.getText()))
+                text.clear();
         }
     }
 

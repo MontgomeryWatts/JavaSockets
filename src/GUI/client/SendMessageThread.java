@@ -37,17 +37,21 @@ public class SendMessageThread extends Thread{
     }
 
     /**
-     * Sends a message to the server.
-     * @param message The String to send to the server.
+     * Sends a message to the server. Now returns boolean,
+     * so text is not cleared if sending messages too quickly.
+     * @param message String representing the message to send
+     * @return true if the message is sent.
      */
-    void send(String message) {
-
+    boolean send(String message) {
         if (messages > 0) {
             toServer.println(message);
             messages--;
+            return true;
         }
-        else
+        else{
             Platform.runLater(this::tooManyMessages);
+            return false;
+        }
     }
 
     /**
@@ -58,7 +62,7 @@ public class SendMessageThread extends Thread{
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("Warning bucko!");
         alert.setHeaderText(null);
-        alert.setContentText("Slow down man.");
+        alert.setContentText("Timed out for 5 seconds.");
         alert.showAndWait();
     }
 
