@@ -16,7 +16,7 @@ public class SendMessageThread extends Thread{
     SendMessageThread(Socket s){
         running = true;
         try{
-            toServer = new PrintStream(s.getOutputStream());
+            toServer = new PrintStream(s.getOutputStream(), true, "utf-8");
         } catch(IOException e){
             System.out.println("Error constructing SendMessageThread");
         }

@@ -25,7 +25,7 @@ public class SocketServerThread extends Thread{
         parentServer = server;
         clientSocket = socket;
         fromClient = new Scanner(clientSocket.getInputStream(), "utf-8");
-        toClient = new PrintStream(clientSocket.getOutputStream());
+        toClient = new PrintStream(clientSocket.getOutputStream(), true, "utf-8");
     }
 
     /**
@@ -65,7 +65,8 @@ public class SocketServerThread extends Thread{
             else if (clientInput.equals(RETURN_USER)){
                 username = fromClient.nextLine();
                 pass = fromClient.nextLine();
-                if((parentServer.authenticatePassword(username, pass)) && (!parentServer.userAlreadyOnline(username)))
+                if((parentServer.authenticatePassword(username, pass))
+                        && (!parentServer.userAlreadyOnline(username)))
                     print(SUCCESSFUL_LOGIN);
                 else
                     print(FAILED_LOGIN);
