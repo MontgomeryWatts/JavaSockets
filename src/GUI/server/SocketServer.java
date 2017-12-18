@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 import static GUI.CommunicationProtocol.USER_OFFLINE;
@@ -13,6 +15,7 @@ public class SocketServer {
     private final File LOGIN_INFO_FILE = new File("logininfo.txt");
     private ArrayList<SocketServerThread> threads;
     private Salt salt;
+    private final DateTimeFormatter df = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     /**
      * Constructor for SocketServer. Used to keep track of alive SocketServerThreads and
@@ -64,7 +67,7 @@ public class SocketServer {
     void printToAllClients(String clientInput) {
         String[] fields = clientInput.split(" ");
         if ((!fields[0].equals(USER_ONLINE)) && (!fields[0].equals(USER_OFFLINE)))
-            System.out.println(clientInput);
+            System.out.println(df.format(LocalDateTime.now()) + " " + clientInput);
         for (SocketServerThread s : threads) {
             s.print(clientInput);
         }
