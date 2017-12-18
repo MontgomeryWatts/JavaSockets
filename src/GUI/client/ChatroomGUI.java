@@ -79,8 +79,8 @@ public class ChatroomGUI extends Application implements Observer{
      */
     private boolean isValidUsername(String username){
         char[] nameAsArray = username.toCharArray();
-        for(int i = 0; i < nameAsArray.length; i++) {
-            if(!Character.isLetterOrDigit(nameAsArray[i]))
+        for(Character c: nameAsArray) {
+            if(!Character.isLetterOrDigit(c))
                 return false;
         }
         return true;

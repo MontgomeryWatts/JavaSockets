@@ -1,5 +1,7 @@
 package GUI.client;
 
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
 
 import java.io.IOException;
@@ -36,12 +38,25 @@ public class ReceiveMessageThread extends Observable implements Runnable{
     }
 
     /**
+     * Displays alert notifying that login info was incorrect.
+     */
+    private void wrongInfoAlert(){
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Warning bucko!");
+        alert.setHeaderText(null);
+        alert.setContentText("Incorrect username or password.");
+        alert.showAndWait();
+    }
+
+    /**
      * Checks for messages from the server and appends them to the text area.
      */
     public void run() {
         String message;
         do{
             message = fromServer.nextLine();
+            if(message.equals(FAILED_LOGIN))
+                Platform.runLater(this::wrongInfoAlert);
         } while(!message.equals(SUCCESSFUL_LOGIN));
         super.setChanged();
         super.notifyObservers();

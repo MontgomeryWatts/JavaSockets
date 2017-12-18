@@ -29,7 +29,8 @@ public class SocketServerThread extends Thread{
     }
 
     /**
-     * Returns the username of the client associated with this thread
+     * Returns the username of the client associated with this SST.
+     * Used by SocketServer.
      * @return String of the username
      */
     String getUsername(){
@@ -37,7 +38,7 @@ public class SocketServerThread extends Thread{
     }
 
     /**
-     * Sends a message to the client
+     * Sends a message to the client.
      * @param message The String to send to the client
      */
     void print(String message){
