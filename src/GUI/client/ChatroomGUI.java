@@ -135,6 +135,7 @@ public class ChatroomGUI extends Application implements Observer{
 
         TextArea messageDisplay = new TextArea();
         messageDisplay.setEditable(false);
+        messageDisplay.setWrapText(true);
 
         TextArea peopleOnline = new TextArea();
         peopleOnline.appendText("Users online:\n");
