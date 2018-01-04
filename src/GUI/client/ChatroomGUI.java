@@ -122,7 +122,7 @@ public class ChatroomGUI extends Application implements Observer{
             passField.clear();
         }
         else{
-            //Indicate usernames cannot have whitespace in them or be empty
+            //Indicate usernames cannot have whitespace in them or be empty.
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Warning bucko!");
             alert.setHeaderText(null);

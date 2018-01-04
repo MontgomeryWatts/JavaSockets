@@ -30,7 +30,7 @@ public class SocketServerThread extends Thread{
 
     /**
      * Sends a message to the client
-     * @param message The String to send to the client
+     * @param message The String to send to the client.
      */
     private void print(String message){
         toClient.println(message);

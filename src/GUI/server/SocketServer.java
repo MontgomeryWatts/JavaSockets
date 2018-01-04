@@ -55,7 +55,7 @@ public class SocketServer {
     }
 
     /**
-     * Prints a message to all threads(clients) contained in the arraylist.
+     * Prints a message to all threads(clients) contained in the HashMap.
      * @param clientInput The message to send to all clients
      */
     void printToAllClients(String clientInput) {

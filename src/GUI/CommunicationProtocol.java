@@ -1,6 +1,7 @@
 package GUI;
 
 public interface CommunicationProtocol {
+    //Constants used to communicate between server and clients
     String CLOSE_THREAD = "k95NwPKr3H6AE4ejdaZmYBzvkw6OzjV/m7cahLVhWZs=";
     String NEW_USER = "PLCWEZlGvRJiyG7aLKLX7TxFfzKa2/sfdJl5w0PoF+Y=";
     String RETURN_USER = "f9UBEmUBoHH6xsGq8cF4/k5cDLO3xEtdlAGPJun5+wE=";
