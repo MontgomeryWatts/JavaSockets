@@ -1,12 +1,18 @@
 package GUI.client;
 
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Socket;
 
 public class SendMessageThread extends Thread{
+    private final int MESSAGE_LIMIT = 5;
+
     private PrintStream toServer;
     private boolean running;
+    private int messages;
 
     /**
      * Constructor for SendMessageThread. Used to send messages to the
@@ -15,6 +21,7 @@ public class SendMessageThread extends Thread{
      */
     SendMessageThread(Socket s){
         running = true;
+        messages = MESSAGE_LIMIT;
         try{
             toServer = new PrintStream(s.getOutputStream(), true, "utf-8");
         } catch(IOException e){
@@ -30,20 +37,46 @@ public class SendMessageThread extends Thread{
     }
 
     /**
-     * Sends a message to the server.
-     * @param message The String to send to the server.
+     * Sends a message to the server. Now returns boolean,
+     * so text is not cleared if sending messages too quickly.
+     * @param message String representing the message to send
+     * @return true if the message is sent.
      */
-    void send(String message) {
-        toServer.println(message);
+    boolean send(String message) {
+        if (messages > 0) {
+            toServer.println(message);
+            messages--;
+            return true;
+        }
+        else{
+            Platform.runLater(this::tooManyMessages);
+            return false;
+        }
     }
 
     /**
-     * Sleep until interrupted. All calls to send() happen from the JavaFX client.
+     * Show a popup indicating the user is sending too many messages.
+     */
+    private void tooManyMessages(){
+        messages = -5;
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Warning bucko!");
+        alert.setHeaderText(null);
+        alert.setContentText("Timed out for 5 seconds.");
+        alert.showAndWait();
+    }
+
+    /**
+     * Sleep for a second, if user has messages less than
+     * the message limit, allow them to send another message.
+     * All calls to send() happen from the JavaFX client.
      */
     public void run(){
         while (running){
             try {
-                sleep(50);
+                sleep(1000);
+                if(messages < MESSAGE_LIMIT)
+                    messages++;
             } catch(InterruptedException e) {}
         }
     }

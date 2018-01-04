@@ -123,13 +123,14 @@ class Salt {
      */
     private boolean usernameAlreadyInDatabase(String username){
         String line;
+        String lower = username.toLowerCase();
         boolean found = false;
         try (BufferedReader fileIn = new BufferedReader(new FileReader(file))){
             do{
                 line = fileIn.readLine();
                 if(line != null) {
                     String[] fields = line.split(" ");
-                    if (fields[0].equals(username))
+                    if (fields[0].toLowerCase().equals(lower))
                         found = true;
                 }
             } while((!found) && (line != null));
