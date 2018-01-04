@@ -90,9 +90,17 @@ public class ChatroomGUI extends Application implements Observer{
      * Gets the text input by the user and sends it through the SendMessageThread.
      */
     private void sendMessageEvent(){
+        String userText = text.getText();
+
+        if((userText.contains(" ")) &&
+                (userText.substring(0, userText.indexOf(" ")).equals("/whisper"))){
+            smt.send(WHISPER_USER + " " + userText.substring(userText.indexOf(" ") + 1));
+            text.clear();
+        }
+
         //Prevents empty messages from being sent
-        if(!text.getText().replaceAll("\\s+", "").equals("")){
-            smt.send(text.getText());
+        else if(!userText.replaceAll("\\s+", "").equals("")){
+            smt.send(userText);
             text.clear();
         }
     }

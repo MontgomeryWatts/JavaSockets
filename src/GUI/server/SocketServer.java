@@ -2,16 +2,17 @@ package GUI.server;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.util.HashMap;
 
 import static GUI.CommunicationProtocol.USER_OFFLINE;
 import static GUI.CommunicationProtocol.USER_ONLINE;
 
 public class SocketServer {
     private final File LOGIN_INFO_FILE = new File("logininfo.txt");
-    private ArrayList<SocketServerThread> threads;
+    private HashMap<String, PrintStream> threads;
     private Salt salt;
 
     /**
@@ -19,18 +20,25 @@ public class SocketServer {
      * authenticate/register users with its Salt.
      */
     private SocketServer(){
-        threads = new ArrayList<>();
+        threads = new HashMap<>();
         salt = new Salt(LOGIN_INFO_FILE);
     }
 
     /**
-     * Adds a SocketServerThread to the list of threads, and gives it an ID number.
-     * @param thread The SocketServerThread to add
+     * Adds a SocketServerThread's corresponding username and PrintStream
+     * to the HashMap. Retrieves all other users already online.
+     * @param username String representing username of the corresponding user
+     * @param printStream PrintStream to send messages to the user
      */
-    void addThread(SocketServerThread thread){
+    void addThread(String username, PrintStream printStream){
         synchronized (threads) {
-            threads.add(thread);
-            printToAllClients(USER_ONLINE + " " + thread.getUsername());
+            //Send all online usernames to new thread
+            for(String user: threads.keySet())
+                printStream.println(USER_ONLINE + " " + user);
+
+            //Add new thread, inform all users that someone has come online.
+            threads.put(username, printStream);
+            printToAllClients(USER_ONLINE + " " + username);
         }
     }
 
@@ -47,17 +55,6 @@ public class SocketServer {
     }
 
     /**
-     * Tells the SocketServerThread calling this method what other users are online.
-     * @param thread The calling SocketServerThread.
-     */
-    void getAllUsers(SocketServerThread thread){
-        synchronized (threads){
-            for(SocketServerThread user: threads)
-                thread.print(USER_ONLINE + " " + user.getUsername());
-        }
-    }
-
-    /**
      * Prints a message to all threads(clients) contained in the arraylist.
      * @param clientInput The message to send to all clients
      */
@@ -65,19 +62,19 @@ public class SocketServer {
         String[] fields = clientInput.split(" ");
         if ((!fields[0].equals(USER_ONLINE)) && (!fields[0].equals(USER_OFFLINE)))
             System.out.println(clientInput);
-        for (SocketServerThread s : threads) {
-            s.print(clientInput);
-        }
+        for (String username : threads.keySet())
+            threads.get(username).println(clientInput);
     }
 
     /**
-     * Removes a thread from the list of threads.
-     * @param thread The SocketServerThread to add to the ArrayList
+     * Removes a username and PrintStream of a given String from the
+     * map of currently online users.
+     * @param username String representing the username whose mapping should be removed
      */
-    void removeThread(SocketServerThread thread) {
+    void removeThread(String username) {
         synchronized (threads) {
-            threads.remove(thread);
-            printToAllClients(USER_OFFLINE + " " + thread.getUsername());
+            threads.remove(username);
+            printToAllClients(USER_OFFLINE + " " + username);
         }
     }
 
@@ -94,14 +91,30 @@ public class SocketServer {
     }
 
     /**
+     * Sends a private message from one user to another
+     * @param sendingUsername String representing the username of the user sending the message
+     * @param receivingUsername String representing the username of the user receiving the message
+     * @param message String of the message to send.
+     */
+    void sendWhisper(String sendingUsername, String receivingUsername, String message){
+        PrintStream printStream;
+        if((printStream = threads.get(receivingUsername)) != null){
+            printStream.println(sendingUsername + " whispers: " + message);
+            if((printStream = threads.get(sendingUsername)) != null){
+                printStream.println("You whispered to " + receivingUsername + ": " + message);
+            }
+        }
+    }
+
+    /**
      * Returns true if the given username is online
      * @param username String containing the username to search for
      * @return true if the user is online
      */
     boolean userAlreadyOnline(String username){
         synchronized (threads){
-            for(SocketServerThread thread: threads){
-                if(thread.getUsername().equals(username))
+            for(String user: threads.keySet()){
+                if(user.equals(username))
                     return true;
             }
             return false;

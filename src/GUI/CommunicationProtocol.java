@@ -8,4 +8,5 @@ public interface CommunicationProtocol {
     String FAILED_LOGIN = "446ASQ8QfXr1p/LaUrDwnFyV494dp1Prjlvneh0qVwA=";
     String USER_ONLINE = "CY9rzUYh03PK3k6DJie09gASQ8LO3xEtdln5EZl=";
     String USER_OFFLINE = "1isut5mzYdfl8gRsG66p+gKZ#1GRcs%$2/3c=";
+    String WHISPER_USER = "GCB4vyJd/jIYW7+iIBwE58XX+VElhAiZUOIj5uOFnOw=";
 }

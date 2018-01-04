@@ -29,18 +29,10 @@ public class SocketServerThread extends Thread{
     }
 
     /**
-     * Returns the username of the client associated with this thread
-     * @return String of the username
-     */
-    String getUsername(){
-        return username;
-    }
-
-    /**
      * Sends a message to the client
      * @param message The String to send to the client
      */
-    void print(String message){
+    private void print(String message){
         toClient.println(message);
     }
 
@@ -76,8 +68,7 @@ public class SocketServerThread extends Thread{
 
         //If the user did not close the window
         if(!clientInput.equals(CLOSE_THREAD)) {
-            parentServer.getAllUsers(this);
-            parentServer.addThread(this);
+            parentServer.addThread(username, toClient);
             System.out.println(clientSocket.getRemoteSocketAddress() + " has logged in as " + username);
             parentServer.printToAllClients(username + " has connected.");
         }
@@ -87,13 +78,19 @@ public class SocketServerThread extends Thread{
                 clientInput = fromClient.nextLine();
                 if(clientInput.equals(CLOSE_THREAD)) {
                     clientSocket.close();
-                    parentServer.removeThread(this);
+                    parentServer.removeThread(username);
                     parentServer.printToAllClients(username + " has disconnected.");
-                } else
+                }
+                else if ((clientInput.contains(" ")) && (clientInput.substring(0,clientInput.indexOf(" "))).equals(WHISPER_USER)){
+                    String nameAndMessage = clientInput.substring(clientInput.indexOf(" ") + 1);
+                    parentServer.sendWhisper(username, nameAndMessage.substring(0, nameAndMessage.indexOf(" ")),
+                            nameAndMessage.substring(nameAndMessage.indexOf(" ") + 1));
+                }
+                else
                     parentServer.printToAllClients(username + ": " + clientInput);
             }
         } catch(IOException e){
-            parentServer.removeThread(this);
+            parentServer.removeThread(username);
         }
 
         System.out.println(clientSocket.getRemoteSocketAddress() + " has logged off as " + username);
