@@ -1,18 +1,20 @@
 package GUI.server;
 
-import java.io.IOException;
-import java.io.PrintStream;
-import java.net.Socket;
-import java.util.Scanner;
+import GUI.CommunicationRequest;
 
-import static GUI.CommunicationProtocol.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+
+import static GUI.CommunicationRequest.*;
 
 
 public class SocketServerThread extends Thread{
     private SocketServer parentServer;
     private Socket clientSocket;
-    private Scanner fromClient;
-    private PrintStream toClient;
+    private ObjectInputStream fromClient;
+    private ObjectOutputStream toClient;
     private String username;
 
     /**
@@ -24,16 +26,17 @@ public class SocketServerThread extends Thread{
     SocketServerThread(SocketServer server, Socket socket) throws IOException{
         parentServer = server;
         clientSocket = socket;
-        fromClient = new Scanner(clientSocket.getInputStream(), "utf-8");
-        toClient = new PrintStream(clientSocket.getOutputStream(), true, "utf-8");
+        toClient = new ObjectOutputStream(socket.getOutputStream());
+        toClient.flush();
+        fromClient = new ObjectInputStream(socket.getInputStream());
     }
 
-    /**
-     * Sends a message to the client
-     * @param message The String to send to the client.
-     */
-    private void print(String message){
-        toClient.println(message);
+    private String[] parseData(String data){
+        try{
+            String[] info = { data.substring(0, data.indexOf(';')), data.substring( data.indexOf(';') + 1 ) };
+            return info;
+        } catch(Exception e){}
+        return null;
     }
 
     /**
@@ -41,58 +44,65 @@ public class SocketServerThread extends Thread{
      */
     public void run() {
         System.out.println("Connected to " + clientSocket.getRemoteSocketAddress());
-        String clientInput, pass;
+        CommunicationRequest<?> clientInput = null;
 
         //Try to register/login the user
         do{
-            clientInput = fromClient.nextLine();
-            if(clientInput.equals(NEW_USER)) {
-                username = fromClient.nextLine();
-                pass = fromClient.nextLine();
-                if (parentServer.registerNewUser(username, pass))
-                    print(SUCCESSFUL_LOGIN);
-                else
-                    print(FAILED_LOGIN);
-            }
-            else if (clientInput.equals(RETURN_USER)){
-                username = fromClient.nextLine();
-                pass = fromClient.nextLine();
-                if((parentServer.authenticatePassword(username, pass))
-                        && (!parentServer.userAlreadyOnline(username)))
-                    print(SUCCESSFUL_LOGIN);
-                else
-                    print(FAILED_LOGIN);
-            }
-        } while((!clientInput.equals(SUCCESSFUL_LOGIN))
-                && (!clientInput.equals(CLOSE_THREAD)));
+            try {
+                clientInput = (CommunicationRequest<?>)fromClient.readObject();
+                String info = (String) clientInput.getData();
+                String[] parsedInfo = parseData(info);
 
-        //If the user did not close the window
-        if(!clientInput.equals(CLOSE_THREAD)) {
+                if (parsedInfo != null) {
+                    boolean loginSuccess;
+                    loginSuccess = (clientInput.getType() == CommType.NEW_USER) ? parentServer.registerNewUser(parsedInfo[0], parsedInfo[1])
+                            : (parentServer.authenticatePassword(parsedInfo[0], parsedInfo[1]) && (!parentServer.userAlreadyOnline(parsedInfo[0])));
+
+                    if (loginSuccess) {
+                        sendRequest(toClient, CommType.SUCCESSFUL_LOGIN, null);
+                        username = parsedInfo[0];
+                    } else
+                        sendRequest(toClient, CommType.FAILED_LOGIN, null);
+                }
+
+            } catch(IOException ioe){
+                System.err.println("IOException while attempting to login a user.");
+            } catch(ClassNotFoundException cnfe){
+                //This should never happen
+                System.err.println("ClassNotFoundException while attempting to login a user.");
+            }
+        } while((clientInput.getType() != CommType.SUCCESSFUL_LOGIN)
+                && (clientInput.getType() != CommType.CLOSE_THREAD));
+
+        //If the user successfully logged in
+        if(clientInput.getType() != CommType.CLOSE_THREAD) {
             parentServer.addThread(username, toClient);
             System.out.println(clientSocket.getRemoteSocketAddress() + " has logged in as " + username);
-            parentServer.printToAllClients(username + " has connected.");
         }
 
         try{
-            while(!clientInput.equals(CLOSE_THREAD)){
-                clientInput = fromClient.nextLine();
-                if(clientInput.equals(CLOSE_THREAD)) {
+            while(clientInput.getType() != CommType.CLOSE_THREAD){
+                clientInput = (CommunicationRequest<?>)fromClient.readObject();
+                if(clientInput.getType() == CommType.CLOSE_THREAD) {
                     clientSocket.close();
                     parentServer.removeThread(username);
-                    parentServer.printToAllClients(username + " has disconnected.");
                 }
-                else if ((clientInput.contains(" ")) && (clientInput.substring(0,clientInput.indexOf(" "))).equals(WHISPER_USER)){
-                    String nameAndMessage = clientInput.substring(clientInput.indexOf(" ") + 1);
-                    parentServer.sendWhisper(username, nameAndMessage.substring(0, nameAndMessage.indexOf(" ")),
-                            nameAndMessage.substring(nameAndMessage.indexOf(" ") + 1));
+                else if (clientInput.getType() == CommType.WHISPER){
+                    String[] parsedInfo = parseData( (String)clientInput.getData() );
+                    if(parsedInfo != null)
+                        parentServer.sendWhisper(username, parsedInfo[0], parsedInfo[1]);
                 }
                 else
-                    parentServer.printToAllClients(username + ": " + clientInput);
+                    parentServer.printToAllClients(clientInput);
             }
         } catch(IOException e){
-            parentServer.removeThread(username);
+            System.err.println("IOException thrown while communicating with" + username);
+        } catch(ClassNotFoundException cnfe){
+            //Should never happen
+            System.err.println("ClassNotFoundException thrown while communicating with " + username);
         }
 
+        parentServer.removeThread(username);
         System.out.println(clientSocket.getRemoteSocketAddress() + " has logged off as " + username);
     }
 }

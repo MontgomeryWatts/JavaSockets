@@ -1,20 +1,19 @@
 package GUI.client;
 
+import GUI.CommunicationRequest;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.util.NoSuchElementException;
 import java.util.Observable;
-import java.util.Scanner;
-
-import static GUI.CommunicationProtocol.*;
 
 public class ReceiveMessageThread extends Observable implements Runnable{
 
-    private Scanner fromServer;
+    private ObjectInputStream fromServer;
     private boolean running;
     private TextArea messageArea;
     private TextArea peopleOnline;
@@ -30,7 +29,7 @@ public class ReceiveMessageThread extends Observable implements Runnable{
         this.messageArea = messageArea;
         this.peopleOnline = peopleOnline;
         try {
-            fromServer = new Scanner(s.getInputStream(), "utf-8");
+            fromServer = new ObjectInputStream(s.getInputStream());
             running = true;
         } catch (IOException e) {
             System.out.println("Error constructing ReceiveMessageThread");
@@ -52,31 +51,40 @@ public class ReceiveMessageThread extends Observable implements Runnable{
      * Checks for messages from the server and appends them to the text area.
      */
     public void run() {
-        String message;
+        CommunicationRequest<?> serverInput = null;
         do{
-            message = fromServer.nextLine();
-            if(message.equals(FAILED_LOGIN))
+            try{
+                serverInput = (CommunicationRequest<?>)fromServer.readObject();
+            } catch(IOException ioe){
+
+            } catch (ClassNotFoundException cnfe){
+                //Should never happen
+            }
+
+            if(serverInput.getType() == CommunicationRequest.CommType.FAILED_LOGIN)
                 Platform.runLater(this::wrongInfoAlert);
-        } while(!message.equals(SUCCESSFUL_LOGIN));
+        } while((serverInput.getType() != CommunicationRequest.CommType.SUCCESSFUL_LOGIN));
         super.setChanged();
         super.notifyObservers();
         while (running) {
             try {
-                message = fromServer.nextLine();
-                String[] fields = message.split(" ");
-                if(fields[0].equals(USER_ONLINE))
-                    peopleOnline.appendText(fields[1] + "\n");
-                else if (fields[0].equals(USER_OFFLINE)){
+                serverInput = (CommunicationRequest<?>)fromServer.readObject();
+                if(serverInput.getType() == CommunicationRequest.CommType.USER_ONLINE)
+                    peopleOnline.appendText(serverInput.getData() + "\n");
+                else if (serverInput.getData() == CommunicationRequest.CommType.USER_OFFLINE){
                     String newText = peopleOnline.getText();
                     peopleOnline.clear();
-                    newText = newText.replaceAll(fields[1] + "\n", "");
+                    newText = newText.replaceAll(serverInput.getData() + "\n", "");
                     peopleOnline.appendText(newText);
                 }
                 else
-                    messageArea.appendText(message + "\n");
+                    messageArea.appendText(serverInput.getData() + "\n");
+            } catch (IOException ioe){
+
+            } catch(ClassNotFoundException cnfe){
+                //Should never happen
             } catch(NoSuchElementException nse){
-                //This will always be thrown once client
-                //closes the window so used to end RMT.
+                //This will always be thrown once client closes the window so used to end RMT.
                 running = false;
             }
         }

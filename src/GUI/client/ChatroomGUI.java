@@ -1,5 +1,6 @@
 package GUI.client;
 
+import GUI.CommunicationRequest;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -14,7 +15,7 @@ import java.net.Socket;
 import java.util.Observable;
 import java.util.Observer;
 
-import static GUI.CommunicationProtocol.*;
+import static GUI.CommunicationRequest.CommType.*;
 import static java.lang.Thread.sleep;
 
 
@@ -22,6 +23,7 @@ public class ChatroomGUI extends Application implements Observer{
     private Stage stage;
     private Scene chatScene;
     private SendMessageThread smt;
+    private String username;
     private TextField text;
     private TextField userField;
     private PasswordField passField;
@@ -79,10 +81,9 @@ public class ChatroomGUI extends Application implements Observer{
      */
     private boolean isValidUsername(String username){
         char[] nameAsArray = username.toCharArray();
-        for(int i = 0; i < nameAsArray.length; i++) {
-            if(!Character.isLetterOrDigit(nameAsArray[i]))
+        for(Character c: nameAsArray)
+            if(!Character.isLetterOrDigit(c))
                 return false;
-        }
         return true;
     }
 
@@ -94,13 +95,13 @@ public class ChatroomGUI extends Application implements Observer{
 
         if((userText.contains(" ")) &&
                 (userText.substring(0, userText.indexOf(" ")).equals("/whisper"))){
-            smt.send(WHISPER_USER + " " + userText.substring(userText.indexOf(" ") + 1));
+            smt.send(WHISPER, username + ";" + userText.substring(userText.indexOf(" ") + 1));
             text.clear();
         }
 
         //Prevents empty messages from being sent
         else if(!userText.replaceAll("\\s+", "").equals("")){
-            smt.send(userText);
+            smt.send(MESSAGE, username + ": " + userText);
             text.clear();
         }
     }
@@ -110,15 +111,13 @@ public class ChatroomGUI extends Application implements Observer{
      * and password to the server to see if it is correct/register.
      * @param type String representing if a login/register is being made.
      */
-    private void sendUserInfoEvent(String type){
-        String username = userField.getText();
+    private void sendUserInfoEvent(CommunicationRequest.CommType type){
+        username = userField.getText();
         //If username has no whitespace and username is not empty.
         if((username.equals(username.replaceAll("\\s+","")))
                 && (!username.replaceAll("\\s+", "").equals(""))
                 && (isValidUsername(username))){
-            smt.send(type);
-            smt.send(username);
-            smt.send(passField.getText());
+            smt.send(type, username + ";" + passField.getText());
             passField.clear();
         }
         else{
@@ -194,7 +193,7 @@ public class ChatroomGUI extends Application implements Observer{
         //Tell the SocketServer to close the thread that corresponds to this client
         //and close SendMessageThread
         stage.setOnCloseRequest(event -> {
-            smt.send(CLOSE_THREAD);
+            smt.send(CLOSE_THREAD, null);
             smt.close();
         });
 
@@ -208,7 +207,7 @@ public class ChatroomGUI extends Application implements Observer{
      * @param o  Not used.
      */
     public void update(Observable observable, Object o) {
-        smt.send(SUCCESSFUL_LOGIN);
+        smt.send(SUCCESSFUL_LOGIN, null);
         Platform.runLater(() -> {
             stage.setScene(chatScene);
             stage.setMinHeight(300);

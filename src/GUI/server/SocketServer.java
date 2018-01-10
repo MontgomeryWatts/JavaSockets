@@ -1,18 +1,20 @@
 package GUI.server;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
+import GUI.CommunicationRequest;
+
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 
-import static GUI.CommunicationProtocol.USER_OFFLINE;
-import static GUI.CommunicationProtocol.USER_ONLINE;
+import static GUI.CommunicationRequest.CommType.MESSAGE;
+import static GUI.CommunicationRequest.CommType.USER_OFFLINE;
+import static GUI.CommunicationRequest.CommType.USER_ONLINE;
+import static GUI.CommunicationRequest.sendRequest;
 
 public class SocketServer {
     private final File LOGIN_INFO_FILE = new File("logininfo.txt");
-    private HashMap<String, PrintStream> threads;
+    private HashMap<String, ObjectOutputStream> threads;
     private Salt salt;
 
     /**
@@ -25,20 +27,23 @@ public class SocketServer {
     }
 
     /**
-     * Adds a SocketServerThread's corresponding username and PrintStream
+     * Adds a SocketServerThread's corresponding username and OutputObjectStream
      * to the HashMap. Retrieves all other users already online.
      * @param username String representing username of the corresponding user
-     * @param printStream PrintStream to send messages to the user
+     * @param outputStream ObjectOutputStream to send messages to the user
      */
-    void addThread(String username, PrintStream printStream){
+    void addThread(String username, ObjectOutputStream outputStream){
         synchronized (threads) {
             //Send all online usernames to new thread
             for(String user: threads.keySet())
-                printStream.println(USER_ONLINE + " " + user);
+                try{
+                outputStream.writeObject(new CommunicationRequest<>(USER_ONLINE, user));
+                } catch(IOException ioe){}
 
             //Add new thread, inform all users that someone has come online.
-            threads.put(username, printStream);
-            printToAllClients(USER_ONLINE + " " + username);
+            threads.put(username, outputStream);
+            printToAllClients(new CommunicationRequest(USER_ONLINE, username));
+            printToAllClients(new CommunicationRequest(MESSAGE, username + " has connected."));
         }
     }
 
@@ -55,15 +60,14 @@ public class SocketServer {
     }
 
     /**
-     * Prints a message to all threads(clients) contained in the HashMap.
-     * @param clientInput The message to send to all clients
+     * Sends a CommunicationRequest to all connected clients
+     * @param request The CommunicationRequest to send.
      */
-    void printToAllClients(String clientInput) {
-        String[] fields = clientInput.split(" ");
-        if ((!fields[0].equals(USER_ONLINE)) && (!fields[0].equals(USER_OFFLINE)))
-            System.out.println(clientInput);
+    void printToAllClients(CommunicationRequest request) {
+        if ((request.getType() != USER_ONLINE) && (request.getType() != USER_OFFLINE))
+            System.out.println(request.getData());
         for (String username : threads.keySet())
-            threads.get(username).println(clientInput);
+                sendRequest(threads.get(username), request);
     }
 
     /**
@@ -74,7 +78,7 @@ public class SocketServer {
     void removeThread(String username) {
         synchronized (threads) {
             threads.remove(username);
-            printToAllClients(USER_OFFLINE + " " + username);
+            printToAllClients(new CommunicationRequest(USER_OFFLINE,  username));
         }
     }
 
@@ -97,11 +101,11 @@ public class SocketServer {
      * @param message String of the message to send.
      */
     void sendWhisper(String sendingUsername, String receivingUsername, String message){
-        PrintStream printStream;
-        if((printStream = threads.get(receivingUsername)) != null){
-            printStream.println(sendingUsername + " whispers: " + message);
-            if((printStream = threads.get(sendingUsername)) != null){
-                printStream.println("You whispered to " + receivingUsername + ": " + message);
+        ObjectOutputStream outputStream;
+        if((outputStream = threads.get(receivingUsername)) != null){
+            sendRequest(outputStream, MESSAGE, sendingUsername + " whispers: " + message);
+            if((outputStream = threads.get(sendingUsername)) != null){
+                sendRequest(outputStream, MESSAGE, "You whisper to " + receivingUsername + ": " + message);
             }
         }
     }
