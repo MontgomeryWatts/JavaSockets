@@ -102,7 +102,6 @@ public class SocketServerThread extends Thread{
             System.err.println("ClassNotFoundException thrown while communicating with " + username);
         }
 
-        parentServer.removeThread(username);
         System.out.println(clientSocket.getRemoteSocketAddress() + " has logged off as " + username);
     }
 }

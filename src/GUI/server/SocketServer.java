@@ -42,8 +42,8 @@ public class SocketServer {
 
             //Add new thread, inform all users that someone has come online.
             threads.put(username, outputStream);
-            printToAllClients(new CommunicationRequest(USER_ONLINE, username));
-            printToAllClients(new CommunicationRequest(MESSAGE, username + " has connected."));
+            printToAllClients(new CommunicationRequest<>(USER_ONLINE, username));
+            printToAllClients(new CommunicationRequest<>(MESSAGE, username + " has connected."));
         }
     }
 
@@ -78,7 +78,7 @@ public class SocketServer {
     void removeThread(String username) {
         synchronized (threads) {
             threads.remove(username);
-            printToAllClients(new CommunicationRequest(USER_OFFLINE,  username));
+            printToAllClients(new CommunicationRequest<>(USER_OFFLINE,  username));
         }
     }
 
@@ -101,11 +101,13 @@ public class SocketServer {
      * @param message String of the message to send.
      */
     void sendWhisper(String sendingUsername, String receivingUsername, String message){
-        ObjectOutputStream outputStream;
-        if((outputStream = threads.get(receivingUsername)) != null){
-            sendRequest(outputStream, MESSAGE, sendingUsername + " whispers: " + message);
-            if((outputStream = threads.get(sendingUsername)) != null){
-                sendRequest(outputStream, MESSAGE, "You whisper to " + receivingUsername + ": " + message);
+        synchronized (threads){
+            ObjectOutputStream toSender = threads.get(sendingUsername);
+            ObjectOutputStream toReceiver = threads.get(receivingUsername);
+            if((toSender != null) && (toReceiver != null)){
+                sendRequest(toSender, new CommunicationRequest<>(MESSAGE, "You whisper to " + receivingUsername
+                + ": " + message));
+                sendRequest(toReceiver, new CommunicationRequest<>(MESSAGE, sendingUsername + " whispers: "  + message));
             }
         }
     }

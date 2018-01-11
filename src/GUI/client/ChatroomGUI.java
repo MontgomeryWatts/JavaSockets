@@ -95,8 +95,14 @@ public class ChatroomGUI extends Application implements Observer{
 
         if((userText.contains(" ")) &&
                 (userText.substring(0, userText.indexOf(" ")).equals("/whisper"))){
-            smt.send(WHISPER, username + ";" + userText.substring(userText.indexOf(" ") + 1));
-            text.clear();
+            try{
+                String nameAndMessage = userText.substring(userText.indexOf(" ") + 1);
+                smt.send(WHISPER, nameAndMessage.substring(0, nameAndMessage.indexOf(" ") ) + ";"
+                + nameAndMessage.substring(nameAndMessage.indexOf(" ") + 1));
+                text.clear();
+            } catch(Exception e){
+                //If the user did not format the message correctly.
+            }
         }
 
         //Prevents empty messages from being sent

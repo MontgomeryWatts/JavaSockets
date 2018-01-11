@@ -71,11 +71,12 @@ public class ReceiveMessageThread extends Observable implements Runnable{
                 serverInput = (CommunicationRequest<?>)fromServer.readObject();
                 if(serverInput.getType() == CommunicationRequest.CommType.USER_ONLINE)
                     peopleOnline.appendText(serverInput.getData() + "\n");
-                else if (serverInput.getData() == CommunicationRequest.CommType.USER_OFFLINE){
+                else if (serverInput.getType() == CommunicationRequest.CommType.USER_OFFLINE){
                     String newText = peopleOnline.getText();
                     peopleOnline.clear();
                     newText = newText.replaceAll(serverInput.getData() + "\n", "");
                     peopleOnline.appendText(newText);
+                    messageArea.appendText(serverInput.getData() + " has disconnected.\n");
                 }
                 else
                     messageArea.appendText(serverInput.getData() + "\n");
