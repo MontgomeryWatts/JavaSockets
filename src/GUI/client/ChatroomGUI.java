@@ -94,7 +94,8 @@ public class ChatroomGUI extends Application implements Observer{
         String userText = text.getText();
 
         if((userText.contains(" ")) &&
-                (userText.substring(0, userText.indexOf(" ")).equals("/whisper"))){
+                 ((userText.substring(0, userText.indexOf(" ")).equals("/whisper"))
+                         || userText.substring(0, userText.indexOf(" ")).equals("/w"))){
             try{
                 String nameAndMessage = userText.substring(userText.indexOf(" ") + 1);
                 smt.send(WHISPER, nameAndMessage.substring(0, nameAndMessage.indexOf(" ") ) + ";"

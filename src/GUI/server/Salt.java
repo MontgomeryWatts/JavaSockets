@@ -10,7 +10,7 @@ import java.util.Base64;
 class Salt {
 
     private final String SALT_ALGORITHM = "SHA1PRNG";
-    private final String HASH_ALGORITHM = "MD5";
+    private final String HASH_ALGORITHM = "SHA-256";
     private final int SEED_LENGTH = 32;
     private File file;
 
