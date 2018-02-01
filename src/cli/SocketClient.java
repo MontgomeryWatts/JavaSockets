@@ -1,4 +1,4 @@
-package CLI;
+package cli;
 
 import java.io.*;
 import java.net.*;

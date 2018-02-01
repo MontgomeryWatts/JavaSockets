@@ -1,13 +1,13 @@
-package GUI.server;
+package gui.server;
 
-import GUI.CommunicationRequest;
+import gui.CommunicationRequest;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-import static GUI.CommunicationRequest.*;
+import static gui.CommunicationRequest.*;
 
 
 public class SocketServerThread extends Thread{

@@ -1,6 +1,6 @@
-package GUI.client;
+package gui.client;
 
-import GUI.CommunicationRequest;
+import gui.CommunicationRequest;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
@@ -20,10 +20,10 @@ public class ReceiveMessageThread extends Observable implements Runnable{
 
     /**
      * Constructor for ReceiveMessageThread. Used to retrieve messages from
-     * the server and append them to the GUI's text area.
+     * the server and append them to the gui's text area.
      * @param s The socket to communicate on.
-     * @param messageArea The text area of the GUI to append messages to.
-     * @param peopleOnline The text area of the GUI to append usernames to.
+     * @param messageArea The text area of the gui to append messages to.
+     * @param peopleOnline The text area of the gui to append usernames to.
      */
     ReceiveMessageThread(Socket s, TextArea messageArea, TextArea peopleOnline) {
         this.messageArea = messageArea;

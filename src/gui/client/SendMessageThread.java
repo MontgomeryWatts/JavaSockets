@@ -1,8 +1,6 @@
-package GUI.client;
+package gui.client;
 
-import GUI.CommunicationRequest;
-import javafx.application.Platform;
-import javafx.scene.control.Alert;
+import gui.CommunicationRequest;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;

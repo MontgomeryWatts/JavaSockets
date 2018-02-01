@@ -1,16 +1,16 @@
-package GUI.server;
+package gui.server;
 
-import GUI.CommunicationRequest;
+import gui.CommunicationRequest;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 
-import static GUI.CommunicationRequest.CommType.MESSAGE;
-import static GUI.CommunicationRequest.CommType.USER_OFFLINE;
-import static GUI.CommunicationRequest.CommType.USER_ONLINE;
-import static GUI.CommunicationRequest.sendRequest;
+import static gui.CommunicationRequest.CommType.MESSAGE;
+import static gui.CommunicationRequest.CommType.USER_OFFLINE;
+import static gui.CommunicationRequest.CommType.USER_ONLINE;
+import static gui.CommunicationRequest.sendRequest;
 
 public class SocketServer {
     private final File LOGIN_INFO_FILE = new File("logininfo.txt");

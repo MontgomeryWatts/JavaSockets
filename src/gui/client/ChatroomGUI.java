@@ -1,6 +1,6 @@
-package GUI.client;
+package gui.client;
 
-import GUI.CommunicationRequest;
+import gui.CommunicationRequest;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -15,7 +15,7 @@ import java.net.Socket;
 import java.util.Observable;
 import java.util.Observer;
 
-import static GUI.CommunicationRequest.CommType.*;
+import static gui.CommunicationRequest.CommType.*;
 import static java.lang.Thread.sleep;
 
 
