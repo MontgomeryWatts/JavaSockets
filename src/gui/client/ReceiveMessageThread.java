@@ -17,17 +17,17 @@ public class ReceiveMessageThread extends Observable implements Runnable{
     private boolean running;
     private TextArea messageArea;
     private TextArea peopleOnline;
+    private String lastWhispered;
 
     /**
      * Constructor for ReceiveMessageThread. Used to retrieve messages from
      * the server and append them to the gui's text area.
      * @param s The socket to communicate on.
-     * @param messageArea The text area of the gui to append messages to.
-     * @param peopleOnline The text area of the gui to append usernames to.
+     * @param client The ChatroomGUI this thread is communicating for
      */
-    ReceiveMessageThread(Socket s, TextArea messageArea, TextArea peopleOnline) {
-        this.messageArea = messageArea;
-        this.peopleOnline = peopleOnline;
+    ReceiveMessageThread(Socket s, ChatroomGUI client) {
+        this.messageArea = client.messageDisplay;
+        this.peopleOnline = client.peopleOnline;
         try {
             fromServer = new ObjectInputStream(s.getInputStream());
             running = true;
@@ -78,8 +78,12 @@ public class ReceiveMessageThread extends Observable implements Runnable{
                     peopleOnline.appendText(newText);
                     messageArea.appendText(serverInput.getData() + " has disconnected.\n");
                 }
-                else
+                else {
                     messageArea.appendText(serverInput.getData() + "\n");
+
+                    if(serverInput.getRelevantUser() != null)
+                        lastWhispered = serverInput.getRelevantUser();
+                }
             } catch (IOException ioe){
 
             } catch(ClassNotFoundException cnfe){

@@ -34,8 +34,8 @@ public class SendMessageThread extends Thread{
     }
 
 
-    <E extends Serializable> void send(CommunicationRequest.CommType type, E data) {
-        CommunicationRequest.sendRequest(toServer, type, data);
+    <E extends Serializable> void send(CommunicationRequest request) {
+        CommunicationRequest.sendRequest(toServer, request);
     }
 
     public void run(){
