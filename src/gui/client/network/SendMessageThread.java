@@ -1,4 +1,4 @@
-package gui.client;
+package gui.client.network;
 
 import gui.CommunicationRequest;
 
@@ -16,7 +16,7 @@ public class SendMessageThread extends Thread{
      * server.
      * @param s The socket to communicate on.
      */
-    SendMessageThread(Socket s){
+    public SendMessageThread(Socket s){
         running = true;
         try{
             toServer = new ObjectOutputStream(s.getOutputStream());
@@ -29,12 +29,12 @@ public class SendMessageThread extends Thread{
     /**
      * Used to terminate the loop within run()
      */
-    void close(){
+    public void close(){
         running = false;
     }
 
 
-    <E extends Serializable> void send(CommunicationRequest request) {
+    public <E extends Serializable> void send(CommunicationRequest request) {
         CommunicationRequest.sendRequest(toServer, request);
     }
 

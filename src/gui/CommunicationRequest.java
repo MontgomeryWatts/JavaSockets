@@ -5,7 +5,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 public class CommunicationRequest<E extends Serializable> implements Serializable{
-    public static char SEPERATOR = ';';
 
     public enum CommType{
         CLOSE_THREAD,
