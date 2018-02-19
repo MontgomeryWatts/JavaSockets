@@ -42,9 +42,15 @@ public class SocketServerThread extends Thread{
         do{
             try {
                 clientInput = (CommunicationRequest<?>)fromClient.readObject();
-                String info = (String) clientInput.getData();
-                username =  clientInput.getRelevantUser();
-                System.out.println("Before login attempt " + username);
+                String info = null;
+
+                // Have to check if client received and replied with successful login,since latency between replies
+                // will cause the server-side thread to re-enter the loop when it should exit
+                if((clientInput.getType() != CommType.SUCCESSFUL_LOGIN)){
+                    info = (String) clientInput.getData();
+                    username =  clientInput.getRelevantUser();
+                }
+
                 if ((info != null) && (username != null)) {
                     boolean loginSuccess;
                     loginSuccess = (clientInput.getType() == CommType.NEW_USER) ? parentServer.registerNewUser(username, info)
