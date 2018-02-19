@@ -1,6 +1,9 @@
-package gui.client;
+package gui.client.user;
 
 import gui.CommunicationRequest;
+import gui.client.Client;
+import gui.client.network.ReceiveMessageThread;
+import gui.client.network.SendMessageThread;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -16,11 +19,10 @@ import java.util.Observable;
 import java.util.Observer;
 
 import static gui.CommunicationRequest.CommType.*;
-import static gui.CommunicationRequest.SEPERATOR;
 import static java.lang.Thread.sleep;
 
 
-public class ChatroomGUI extends Application implements Observer{
+public class ChatroomGUI extends Application implements Observer, Client{
     private Stage stage;
     private Scene chatScene;
     private SendMessageThread smt;
@@ -28,10 +30,10 @@ public class ChatroomGUI extends Application implements Observer{
     private TextField text;
     private TextField userField;
     private PasswordField passField;
+    private TextArea messageDisplay;
+    private TextArea peopleOnline;
+    private String lastWhispered;
 
-    TextArea messageDisplay;
-    TextArea peopleOnline;
-    String lastWhispered;
     /**
      * Creates the window which users will use to login/register
      * @return A Scene to be used by the user for login.
@@ -98,7 +100,7 @@ public class ChatroomGUI extends Application implements Observer{
         String userText = text.getText();
 
         if(userText.contains(" ")){
-            int spaceIndex = userText.indexOf(' ');
+            int spaceIndex = userText.indexOf(" ");
 
             if((userText.substring(0, spaceIndex).equals("/whisper"))
                     || userText.substring(0, spaceIndex).equals("/w")){
@@ -122,6 +124,11 @@ public class ChatroomGUI extends Application implements Observer{
                 } catch(Exception e){
                     //If the user did not format the message correctly.
                 }
+            }
+
+            else{
+                smt.send(new CommunicationRequest(MESSAGE, username + ": " + userText));
+                text.clear();
             }
         }
 
@@ -227,6 +234,35 @@ public class ChatroomGUI extends Application implements Observer{
     }
 
     /**
+     * Overrides the Client interface's method. Used to add messages
+     * to the messageDisplay area.
+     * @param message The message to add
+     */
+    public void updateMessages(String message) {
+        Platform.runLater(() -> messageDisplay.appendText(message));
+    }
+
+    /**
+     * Updates the gui with the users who are online
+     * @param username String to add/remove from the list
+     * @param type Tells whether username is being added or removed
+     */
+    public void updateUsersOnline(String username, CommunicationRequest.CommType type) {
+        Platform.runLater(()-> {
+            if(type == USER_ONLINE){
+                peopleOnline.appendText(username + "\n");
+            }
+            else{
+                String newText = peopleOnline.getText();
+                peopleOnline.clear();
+                newText = newText.replaceAll(username + "\n", "");
+                peopleOnline.appendText(newText);
+                messageDisplay.appendText(username + " has disconnected.\n");
+            }
+        });
+    }
+
+    /**
      * Called when the ReceieveMessageThread receives SUCCESSFUL_LOGIN from the server.
      * Switches the scene to the main chat window.
      * @param observable The ReceiveMessageThread, not directly used.
@@ -244,4 +280,7 @@ public class ChatroomGUI extends Application implements Observer{
     public static void main(String[] args) {
         Application.launch(args);
     }
+
+
+
 }

@@ -1,6 +1,8 @@
-package gui.client;
+package gui.client.network;
 
 import gui.CommunicationRequest;
+import gui.client.Client;
+import gui.client.user.ChatroomGUI;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
@@ -15,9 +17,7 @@ public class ReceiveMessageThread extends Observable implements Runnable{
 
     private ObjectInputStream fromServer;
     private boolean running;
-    private TextArea messageArea;
-    private TextArea peopleOnline;
-    private String lastWhispered;
+    private Client client;
 
     /**
      * Constructor for ReceiveMessageThread. Used to retrieve messages from
@@ -25,15 +25,21 @@ public class ReceiveMessageThread extends Observable implements Runnable{
      * @param s The socket to communicate on.
      * @param client The ChatroomGUI this thread is communicating for
      */
-    ReceiveMessageThread(Socket s, ChatroomGUI client) {
-        this.messageArea = client.messageDisplay;
-        this.peopleOnline = client.peopleOnline;
+    public ReceiveMessageThread(Socket s, Client client) {
+        this.client = client;
         try {
             fromServer = new ObjectInputStream(s.getInputStream());
             running = true;
         } catch (IOException e) {
             System.out.println("Error constructing ReceiveMessageThread");
         }
+    }
+
+    /**
+     * Stops the run method
+     */
+    public void close(){
+        running = false;
     }
 
     /**
@@ -70,19 +76,14 @@ public class ReceiveMessageThread extends Observable implements Runnable{
             try {
                 serverInput = (CommunicationRequest<?>)fromServer.readObject();
                 if(serverInput.getType() == CommunicationRequest.CommType.USER_ONLINE)
-                    peopleOnline.appendText(serverInput.getData() + "\n");
+                    client.updateUsersOnline((String)serverInput.getData(),
+                            CommunicationRequest.CommType.USER_ONLINE);
                 else if (serverInput.getType() == CommunicationRequest.CommType.USER_OFFLINE){
-                    String newText = peopleOnline.getText();
-                    peopleOnline.clear();
-                    newText = newText.replaceAll(serverInput.getData() + "\n", "");
-                    peopleOnline.appendText(newText);
-                    messageArea.appendText(serverInput.getData() + " has disconnected.\n");
+                    client.updateUsersOnline((String)serverInput.getData(),
+                            CommunicationRequest.CommType.USER_OFFLINE);
                 }
                 else {
-                    messageArea.appendText(serverInput.getData() + "\n");
-
-                    if(serverInput.getRelevantUser() != null)
-                        lastWhispered = serverInput.getRelevantUser();
+                    client.updateMessages(serverInput.getData() + "\n");
                 }
             } catch (IOException ioe){
 
