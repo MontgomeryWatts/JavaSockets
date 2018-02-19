@@ -5,6 +5,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 public class CommunicationRequest<E extends Serializable> implements Serializable{
+    public static char SEPERATOR = ';';
 
     public enum CommType{
         CLOSE_THREAD,
@@ -15,16 +16,22 @@ public class CommunicationRequest<E extends Serializable> implements Serializabl
         FAILED_LOGIN,
         USER_ONLINE,
         USER_OFFLINE,
-        WHISPER,
-        REPLY
+        WHISPER
     }
 
     private CommType type;
     private E data;
+    private String relevantUser;
 
     public CommunicationRequest(CommType type, E data){
         this.type = type;
         this.data = data;
+    }
+
+    public CommunicationRequest(CommType type, E data, String relevantUser){
+        this.type = type;
+        this.data = data;
+        this.relevantUser = relevantUser;
     }
 
     public CommType getType() {
@@ -33,6 +40,10 @@ public class CommunicationRequest<E extends Serializable> implements Serializabl
 
     public E getData() {
         return data;
+    }
+
+    public String getRelevantUser() {
+        return relevantUser;
     }
 
     public static <E extends Serializable> void sendRequest(ObjectOutputStream outputStream, CommType type, E data){

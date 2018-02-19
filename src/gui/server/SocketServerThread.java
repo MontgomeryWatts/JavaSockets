@@ -31,14 +31,6 @@ public class SocketServerThread extends Thread{
         fromClient = new ObjectInputStream(socket.getInputStream());
     }
 
-    private String[] parseData(String data){
-        try{
-            String[] info = { data.substring(0, data.indexOf(';')), data.substring( data.indexOf(';') + 1 ) };
-            return info;
-        } catch(Exception e){}
-        return null;
-    }
-
     /**
      * Communicates with client while the client has not sent the shutdown message.
      */
@@ -50,17 +42,22 @@ public class SocketServerThread extends Thread{
         do{
             try {
                 clientInput = (CommunicationRequest<?>)fromClient.readObject();
-                String info = (String) clientInput.getData();
-                String[] parsedInfo = parseData(info);
+                String info = null;
 
-                if (parsedInfo != null) {
+                // Have to check if client received and replied with successful login,since latency between replies
+                // will cause the server-side thread to re-enter the loop when it should exit
+                if((clientInput.getType() != CommType.SUCCESSFUL_LOGIN)){
+                    info = (String) clientInput.getData();
+                    username =  clientInput.getRelevantUser();
+                }
+
+                if ((info != null) && (username != null)) {
                     boolean loginSuccess;
-                    loginSuccess = (clientInput.getType() == CommType.NEW_USER) ? parentServer.registerNewUser(parsedInfo[0], parsedInfo[1])
-                            : (parentServer.authenticatePassword(parsedInfo[0], parsedInfo[1]) && (!parentServer.userAlreadyOnline(parsedInfo[0])));
+                    loginSuccess = (clientInput.getType() == CommType.NEW_USER) ? parentServer.registerNewUser(username, info)
+                            : (parentServer.authenticatePassword(username, info) && (!parentServer.userAlreadyOnline(username)));
 
                     if (loginSuccess) {
                         sendRequest(toClient, CommType.SUCCESSFUL_LOGIN, null);
-                        username = parsedInfo[0];
                     } else
                         sendRequest(toClient, CommType.FAILED_LOGIN, null);
                 }
@@ -88,9 +85,10 @@ public class SocketServerThread extends Thread{
                     parentServer.removeThread(username);
                 }
                 else if (clientInput.getType() == CommType.WHISPER){
-                    String[] parsedInfo = parseData( (String)clientInput.getData() );
-                    if(parsedInfo != null)
-                        parentServer.sendWhisper(username, parsedInfo[0], parsedInfo[1]);
+                    String receivingUsername = clientInput.getRelevantUser();
+                    String message = (String)clientInput.getData();
+                    if((receivingUsername != null) && (message != null))
+                        parentServer.sendWhisper(username, receivingUsername, message);
                 }
                 else
                     parentServer.printToAllClients(clientInput);
@@ -104,4 +102,5 @@ public class SocketServerThread extends Thread{
 
         System.out.println(clientSocket.getRemoteSocketAddress() + " has logged off as " + username);
     }
+
 }

@@ -107,7 +107,8 @@ public class SocketServer {
             if((toSender != null) && (toReceiver != null)){
                 sendRequest(toSender, new CommunicationRequest<>(MESSAGE, "You whisper to " + receivingUsername
                 + ": " + message));
-                sendRequest(toReceiver, new CommunicationRequest<>(MESSAGE, sendingUsername + " whispers: "  + message));
+                sendRequest(toReceiver, new CommunicationRequest<>(MESSAGE, sendingUsername + " whispers: " + message,
+                                sendingUsername));
             }
         }
     }
@@ -128,7 +129,10 @@ public class SocketServer {
     }
 
     public static void main(String [] args) {
-
+        if(args.length != 1){
+            System.out.println("USAGE: java SocketServer PORT");
+            System.exit(1);
+        }
         int serverPort = Integer.parseInt(args[0]);
         SocketServer mainServer = new SocketServer();
         ServerSocket serverSocket = null;
