@@ -117,9 +117,8 @@ public class ChatroomGUI extends Application implements Observer, Client{
             else if((userText.substring(0, spaceIndex).equals("/reply"))
                     || userText.substring(0, spaceIndex).equals("/r")){
                 try{
-                    String nameAndMessage = userText.substring(spaceIndex + 1);
-                    smt.send(new CommunicationRequest(WHISPER, nameAndMessage.substring(nameAndMessage.indexOf(" ") + 1),
-                            lastWhispered));
+                    String message = userText.substring(spaceIndex + 1);
+                    smt.send(new CommunicationRequest(WHISPER, message, lastWhispered));
                     text.clear();
                 } catch(Exception e){
                     //If the user did not format the message correctly.
@@ -204,7 +203,7 @@ public class ChatroomGUI extends Application implements Observer, Client{
 
         //Try to create a socket to communicate on
         try {
-            socket = new Socket("127.0.0.1", 6000);
+            socket = new Socket("129.21.130.62", 6000);
             sleep(1000);
         } catch(Exception e){
             System.exit(1);

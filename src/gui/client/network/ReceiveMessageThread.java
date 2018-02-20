@@ -89,7 +89,7 @@ public class ReceiveMessageThread extends Observable implements Runnable{
                         client.setLastWhispered(serverInput.getRelevantUser());
                 }
             } catch (IOException ioe){
-                System.err.println("IOException thrown while reading server input sometime after successful login");
+
             } catch(ClassNotFoundException cnfe){
                 //Should never happen
                 System.err.println("Un-throwable exception thrown!!");
