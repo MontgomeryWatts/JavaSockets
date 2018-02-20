@@ -163,6 +163,12 @@ public class ChatroomGUI extends Application implements Observer, Client{
             alert.showAndWait();
         }
     }
+
+    @Override
+    public void setLastWhispered(String lastWhispered) {
+        this.lastWhispered = lastWhispered;
+    }
+
     /**
      * Creates everything for the JavaFX window.
      * @param primaryStage the JavaFX stage

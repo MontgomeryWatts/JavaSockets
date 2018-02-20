@@ -7,15 +7,13 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 
-import static gui.CommunicationRequest.CommType.MESSAGE;
-import static gui.CommunicationRequest.CommType.USER_OFFLINE;
-import static gui.CommunicationRequest.CommType.USER_ONLINE;
+import static gui.CommunicationRequest.CommType.*;
 import static gui.CommunicationRequest.sendRequest;
 
 public class SocketServer {
     private final File LOGIN_INFO_FILE = new File("logininfo.txt");
     private HashMap<String, ObjectOutputStream> threads;
-    private Salt salt;
+    private final Salt salt;
 
     /**
      * Constructor for SocketServer. Used to keep track of alive SocketServerThreads and
@@ -38,7 +36,9 @@ public class SocketServer {
             for(String user: threads.keySet())
                 try{
                 outputStream.writeObject(new CommunicationRequest<>(USER_ONLINE, user));
-                } catch(IOException ioe){}
+                } catch(IOException ioe){
+                    System.err.println("Error adding thread to threads HashMap");
+                }
 
             //Add new thread, inform all users that someone has come online.
             threads.put(username, outputStream);
@@ -107,7 +107,7 @@ public class SocketServer {
             if((toSender != null) && (toReceiver != null)){
                 sendRequest(toSender, new CommunicationRequest<>(MESSAGE, "You whisper to " + receivingUsername
                 + ": " + message));
-                sendRequest(toReceiver, new CommunicationRequest<>(MESSAGE, sendingUsername + " whispers: " + message,
+                sendRequest(toReceiver, new CommunicationRequest<>(WHISPER, sendingUsername + " whispers: " + message,
                                 sendingUsername));
             }
         }

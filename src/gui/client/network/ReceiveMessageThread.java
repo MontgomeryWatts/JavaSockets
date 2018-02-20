@@ -38,7 +38,7 @@ public class ReceiveMessageThread extends Observable implements Runnable{
     /**
      * Stops the run method
      */
-    public void close(){
+    void close(){
         running = false;
     }
 
@@ -62,14 +62,15 @@ public class ReceiveMessageThread extends Observable implements Runnable{
             try{
                 serverInput = (CommunicationRequest<?>)fromServer.readObject();
             } catch(IOException ioe){
-
+                System.err.println("IOException thrown while reading from server.");
             } catch (ClassNotFoundException cnfe){
                 //Should never happen
+                System.err.println("ClassNotFoundException thrown while reading from server.");
             }
 
             if(serverInput.getType() == CommunicationRequest.CommType.FAILED_LOGIN)
                 Platform.runLater(this::wrongInfoAlert);
-        } while((serverInput.getType() != CommunicationRequest.CommType.SUCCESSFUL_LOGIN));
+        } while((serverInput != null) &&(serverInput.getType() != CommunicationRequest.CommType.SUCCESSFUL_LOGIN));
         super.setChanged();
         super.notifyObservers();
         while (running) {
@@ -84,11 +85,14 @@ public class ReceiveMessageThread extends Observable implements Runnable{
                 }
                 else {
                     client.updateMessages(serverInput.getData() + "\n");
+                    if(serverInput.getType() == CommunicationRequest.CommType.WHISPER)
+                        client.setLastWhispered(serverInput.getRelevantUser());
                 }
             } catch (IOException ioe){
-
+                System.err.println("IOException thrown while reading server input sometime after successful login");
             } catch(ClassNotFoundException cnfe){
                 //Should never happen
+                System.err.println("Un-throwable exception thrown!!");
             } catch(NoSuchElementException nse){
                 //This will always be thrown once client closes the window so used to end RMT.
                 running = false;
