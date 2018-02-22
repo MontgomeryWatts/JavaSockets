@@ -203,7 +203,7 @@ public class ChatroomGUI extends Application implements Observer, Client{
 
         //Try to create a socket to communicate on
         try {
-            socket = new Socket("129.21.130.62", 6000);
+            socket = new Socket("localhost", 6000);
             sleep(1000);
         } catch(Exception e){
             System.exit(1);
