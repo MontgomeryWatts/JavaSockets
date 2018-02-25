@@ -8,7 +8,12 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 import static gui.CommunicationRequest.*;
+import static gui.CommunicationRequest.CommType.*;
 
+
+/**
+ * Server-side thread that handles a connection to a client
+ */
 
 public class SocketServerThread extends Thread{
     private SocketServer parentServer;
@@ -21,7 +26,7 @@ public class SocketServerThread extends Thread{
      * Creates a SocketServerThread which communicates with clients
      * @param server The SocketServer this thread belongs to
      * @param socket The Socket of the incoming client connection
-     * @throws IOException If the SocketServerThread is unable to get I/OStreams from the Socket
+     * @throws IOException If the SocketServerThread is unable to get I/O Streams from the Socket
      */
     SocketServerThread(SocketServer server, Socket socket) throws IOException{
         parentServer = server;
@@ -46,20 +51,20 @@ public class SocketServerThread extends Thread{
 
                 // Have to check if client received and replied with successful login,since latency between replies
                 // will cause the server-side thread to re-enter the loop when it should exit
-                if((clientInput.getType() != CommType.SUCCESSFUL_LOGIN)){
+                if((clientInput.getType() != SUCCESSFUL_LOGIN)){
                     info = (String) clientInput.getData();
                     username =  clientInput.getRelevantUser();
                 }
 
                 if ((info != null) && (username != null)) {
                     boolean loginSuccess;
-                    loginSuccess = (clientInput.getType() == CommType.NEW_USER) ? parentServer.registerNewUser(username, info)
+                    loginSuccess = (clientInput.getType() == NEW_USER) ? parentServer.registerNewUser(username, info)
                             : (parentServer.authenticatePassword(username, info) && (!parentServer.userAlreadyOnline(username)));
 
                     if (loginSuccess) {
-                        sendRequest(toClient, CommType.SUCCESSFUL_LOGIN, null);
+                        sendRequest(toClient, new CommunicationRequest<>(SUCCESSFUL_LOGIN, null));
                     } else
-                        sendRequest(toClient, CommType.FAILED_LOGIN, null);
+                        sendRequest(toClient, new CommunicationRequest<>(FAILED_LOGIN, null));
                 }
 
             } catch(IOException ioe){
@@ -68,23 +73,23 @@ public class SocketServerThread extends Thread{
                 //This should never happen
                 System.err.println("ClassNotFoundException while attempting to login a user.");
             }
-        } while((clientInput.getType() != CommType.SUCCESSFUL_LOGIN)
-                && (clientInput.getType() != CommType.CLOSE_THREAD));
+        } while((clientInput.getType() != SUCCESSFUL_LOGIN)
+                && (clientInput.getType() != CLOSE_THREAD));
 
         //If the user successfully logged in
-        if(clientInput.getType() != CommType.CLOSE_THREAD) {
+        if(clientInput.getType() != CLOSE_THREAD) {
             parentServer.addThread(username, toClient);
             System.out.println(clientSocket.getRemoteSocketAddress() + " has logged in as " + username);
         }
 
         try{
-            while(clientInput.getType() != CommType.CLOSE_THREAD){
+            while(clientInput.getType() != CLOSE_THREAD){
                 clientInput = (CommunicationRequest<?>)fromClient.readObject();
-                if(clientInput.getType() == CommType.CLOSE_THREAD) {
+                if(clientInput.getType() == CLOSE_THREAD) {
                     clientSocket.close();
                     parentServer.removeThread(username);
                 }
-                else if (clientInput.getType() == CommType.WHISPER){
+                else if (clientInput.getType() == WHISPER){
                     String receivingUsername = clientInput.getRelevantUser();
                     String message = (String)clientInput.getData();
                     if((receivingUsername != null) && (message != null))

@@ -21,6 +21,10 @@ import java.util.Observer;
 import static gui.CommunicationRequest.CommType.*;
 import static java.lang.Thread.sleep;
 
+/**
+ * The GUI of the Chat program, uses JavaFX. Spawns Send- and ReceiveMessageThreads in order to communicate with the
+ * server
+ */
 
 public class ChatroomGUI extends Application implements Observer, Client{
     private Stage stage;
@@ -38,6 +42,7 @@ public class ChatroomGUI extends Application implements Observer, Client{
      * Creates the window which users will use to login/register
      * @return A Scene to be used by the user for login.
      */
+
     private Scene createLoginScene(){
 
         VBox userPassBox = new VBox();
@@ -85,6 +90,7 @@ public class ChatroomGUI extends Application implements Observer, Client{
      * @param username The username to check
      * @return true if there are only alphanumeric characters.
      */
+
     private boolean isValidUsername(String username){
         char[] nameAsArray = username.toCharArray();
         for(Character c: nameAsArray)
@@ -96,6 +102,7 @@ public class ChatroomGUI extends Application implements Observer, Client{
     /**
      * Gets the text input by the user and sends it through the SendMessageThread.
      */
+
     private void sendMessageEvent(){
         String userText = text.getText();
 
@@ -106,7 +113,7 @@ public class ChatroomGUI extends Application implements Observer, Client{
                     || userText.substring(0, spaceIndex).equals("/w")){
                 try{
                     String nameAndMessage = userText.substring(spaceIndex + 1);
-                    smt.send(new CommunicationRequest(WHISPER, nameAndMessage.substring(nameAndMessage.indexOf(" ") + 1),
+                    smt.send(new CommunicationRequest<>(WHISPER, nameAndMessage.substring(nameAndMessage.indexOf(" ") + 1),
                             nameAndMessage.substring(0, nameAndMessage.indexOf(" "))));
                     text.clear();
                 } catch(Exception e){
@@ -118,7 +125,7 @@ public class ChatroomGUI extends Application implements Observer, Client{
                     || userText.substring(0, spaceIndex).equals("/r")){
                 try{
                     String message = userText.substring(spaceIndex + 1);
-                    smt.send(new CommunicationRequest(WHISPER, message, lastWhispered));
+                    smt.send(new CommunicationRequest<>(WHISPER, message, lastWhispered));
                     text.clear();
                 } catch(Exception e){
                     //If the user did not format the message correctly.
@@ -126,14 +133,14 @@ public class ChatroomGUI extends Application implements Observer, Client{
             }
 
             else{
-                smt.send(new CommunicationRequest(MESSAGE, username + ": " + userText));
+                smt.send(new CommunicationRequest<>(MESSAGE, username + ": " + userText));
                 text.clear();
             }
         }
 
         //Prevents empty messages from being sent
         else if(!userText.replaceAll("\\s+", "").equals("")){
-            smt.send(new CommunicationRequest(MESSAGE, username + ": " + userText));
+            smt.send(new CommunicationRequest<>(MESSAGE, username + ": " + userText));
             text.clear();
         }
     }
@@ -143,6 +150,7 @@ public class ChatroomGUI extends Application implements Observer, Client{
      * and password to the server to see if it is correct/register.
      * @param type String representing if a login/register is being made.
      */
+
     private void sendUserInfoEvent(CommunicationRequest.CommType type){
         username = userField.getText();
         //If username has no whitespace and username is not empty.
@@ -163,7 +171,11 @@ public class ChatroomGUI extends Application implements Observer, Client{
         }
     }
 
-    @Override
+    /**
+     * Sets the name of the last person who whispered the user.
+     * @param lastWhispered String representing the last person to whisper this user
+     */
+
     public void setLastWhispered(String lastWhispered) {
         this.lastWhispered = lastWhispered;
     }
@@ -172,6 +184,7 @@ public class ChatroomGUI extends Application implements Observer, Client{
      * Creates everything for the JavaFX window.
      * @param primaryStage the JavaFX stage
      */
+
     public void start(Stage primaryStage){
         stage = primaryStage;
 
@@ -231,7 +244,7 @@ public class ChatroomGUI extends Application implements Observer, Client{
         //Tell the SocketServer to close the thread that corresponds to this client
         //and close SendMessageThread
         stage.setOnCloseRequest(event -> {
-            smt.send(new CommunicationRequest(CLOSE_THREAD, null));
+            smt.send(new CommunicationRequest<>(CLOSE_THREAD, null));
             smt.close();
         });
 
@@ -243,6 +256,7 @@ public class ChatroomGUI extends Application implements Observer, Client{
      * to the messageDisplay area.
      * @param message The message to add
      */
+
     public void updateMessages(String message) {
         Platform.runLater(() -> messageDisplay.appendText(message));
     }
@@ -252,6 +266,7 @@ public class ChatroomGUI extends Application implements Observer, Client{
      * @param username String to add/remove from the list
      * @param type Tells whether username is being added or removed
      */
+
     public void updateUsersOnline(String username, CommunicationRequest.CommType type) {
         Platform.runLater(()-> {
             if(type == USER_ONLINE){
@@ -273,8 +288,9 @@ public class ChatroomGUI extends Application implements Observer, Client{
      * @param observable The ReceiveMessageThread, not directly used.
      * @param o  Not used.
      */
+
     public void update(Observable observable, Object o) {
-        smt.send(new CommunicationRequest(SUCCESSFUL_LOGIN, null));
+        smt.send(new CommunicationRequest<>(SUCCESSFUL_LOGIN, null));
         Platform.runLater(() -> {
             stage.setScene(chatScene);
             stage.setMinHeight(300);

@@ -6,6 +6,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
+/**
+ * Handles storage, creation, and authentication of user accounts. Takes in the username and password given by the user,
+ * then salts and hashes it so it can be safely stored without directly being saved as plaintext.
+ */
 
 class Salt {
 
@@ -18,6 +22,7 @@ class Salt {
      * Creates a Salt object which refers to a file.
      * @param file The file where user info will be stored.
      */
+
     Salt(File file){
         this.file = file;
     }
@@ -30,6 +35,7 @@ class Salt {
      * @return true if the entered password hashes to the right value. false if it doesn't, if the
      * entered username does not exist in the file, or an exception was raised reading from the file.
      */
+
     boolean authenticatePassword(String username, String password){
         try (BufferedReader fileIn = new BufferedReader(new FileReader(file))){
             String line;
@@ -60,6 +66,7 @@ class Salt {
      * @param saltedPassword A String from the concatenation of the salt String and password String
      * @return A hash String to be saved to file for use in password authentication.
      */
+
     private String generateHash(String saltedPassword){
         try {
             MessageDigest md = MessageDigest.getInstance(HASH_ALGORITHM);
@@ -77,6 +84,7 @@ class Salt {
      * Generates a salt to be used for password storage.
      * @return A salt String to be saved to file for use in password authentication.
      */
+
     private String generateSalt(){
         try {
             byte[] salt = SecureRandom.getInstance(SALT_ALGORITHM).generateSeed(SEED_LENGTH);
@@ -96,6 +104,7 @@ class Salt {
      * @return true if the information is successfully saved to file. false if the username is
      * already contained in the file, or an exception occurs.
      */
+
     boolean registerNewUser(String username, String password){
         //Without this, one user may have multiple salts and hashes saved to file.
         //However, as-is, a password cannot be changed once it is set.
@@ -121,6 +130,7 @@ class Salt {
      * @param username a String of the username to look for
      * @return true if the username is contained in the file.
      */
+
     private boolean usernameAlreadyInDatabase(String username){
         String line;
         String lower = username.toLowerCase();

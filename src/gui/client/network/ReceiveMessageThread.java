@@ -13,6 +13,10 @@ import java.net.Socket;
 import java.util.NoSuchElementException;
 import java.util.Observable;
 
+/**
+ * Used to receive CommunicationRequests from the server and notify its Client so it may perform whatever tasks is needed.
+ */
+
 public class ReceiveMessageThread extends Observable implements Runnable{
 
     private ObjectInputStream fromServer;
@@ -25,6 +29,7 @@ public class ReceiveMessageThread extends Observable implements Runnable{
      * @param s The socket to communicate on.
      * @param client The ChatroomGUI this thread is communicating for
      */
+
     public ReceiveMessageThread(Socket s, Client client) {
         this.client = client;
         try {
@@ -38,6 +43,7 @@ public class ReceiveMessageThread extends Observable implements Runnable{
     /**
      * Stops the run method
      */
+
     void close(){
         running = false;
     }
@@ -45,6 +51,7 @@ public class ReceiveMessageThread extends Observable implements Runnable{
     /**
      * Displays alert notifying that login info was incorrect.
      */
+
     private void wrongInfoAlert(){
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Warning bucko!");
@@ -54,8 +61,9 @@ public class ReceiveMessageThread extends Observable implements Runnable{
     }
 
     /**
-     * Checks for messages from the server and appends them to the text area.
+     * Checks for messages from the server and has its corresponding Client do its relevant function
      */
+
     public void run() {
         CommunicationRequest<?> serverInput = null;
         do{

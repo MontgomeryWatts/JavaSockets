@@ -10,6 +10,12 @@ import java.util.HashMap;
 import static gui.CommunicationRequest.CommType.*;
 import static gui.CommunicationRequest.sendRequest;
 
+/**
+ * Server that accepts connections then passes off the connection to a separate SocketServerThread.
+ * Contains a HashMap mapping usernames of successfully logged in users to their corresponding ObjectOutputStream
+ * and a Salt class that is used handle creating and authenticating accounts.
+ */
+
 public class SocketServer {
     private final File LOGIN_INFO_FILE = new File("logininfo.txt");
     private HashMap<String, ObjectOutputStream> threads;
@@ -19,17 +25,19 @@ public class SocketServer {
      * Constructor for SocketServer. Used to keep track of alive SocketServerThreads and
      * authenticate/register users with its Salt.
      */
+
     private SocketServer(){
         threads = new HashMap<>();
         salt = new Salt(LOGIN_INFO_FILE);
     }
 
     /**
-     * Adds a SocketServerThread's corresponding username and OutputObjectStream
-     * to the HashMap. Retrieves all other users already online.
+     * Adds a SocketServerThread's corresponding username and OutputObjectStream to the HashMap. Retrieves all other
+     * users already online and informs the new user so they may be added to their "Users Online" list.
      * @param username String representing username of the corresponding user
      * @param outputStream ObjectOutputStream to send messages to the user
      */
+
     void addThread(String username, ObjectOutputStream outputStream){
         synchronized (threads) {
             //Send all online usernames to new thread
@@ -48,11 +56,12 @@ public class SocketServer {
     }
 
     /**
-     * Calls the server's salt in order to determine if the password for the given username is correct
+     * Calls the server's Salt in order to determine if the password for the given username is correct
      * @param username a String containing the username
      * @param password a String containing the password.
      * @return true if the password given matches the hashed password saved to file.
      */
+
     boolean authenticatePassword(String username, String password){
         synchronized (salt) {
             return salt.authenticatePassword(username, password);
@@ -63,6 +72,7 @@ public class SocketServer {
      * Sends a CommunicationRequest to all connected clients
      * @param request The CommunicationRequest to send.
      */
+
     void printToAllClients(CommunicationRequest request) {
         if ((request.getType() != USER_ONLINE) && (request.getType() != USER_OFFLINE))
             System.out.println(request.getData());
@@ -75,6 +85,7 @@ public class SocketServer {
      * map of currently online users.
      * @param username String representing the username whose mapping should be removed
      */
+
     void removeThread(String username) {
         synchronized (threads) {
             threads.remove(username);
@@ -88,6 +99,7 @@ public class SocketServer {
      * @param password a String containing the password
      * @return true if the username and hashed password are successfully written to file.
      */
+
     boolean registerNewUser(String username, String password){
         synchronized (salt) {
             return salt.registerNewUser(username, password);
@@ -100,6 +112,7 @@ public class SocketServer {
      * @param receivingUsername String representing the username of the user receiving the message
      * @param message String of the message to send.
      */
+
     void sendWhisper(String sendingUsername, String receivingUsername, String message){
         synchronized (threads){
             ObjectOutputStream toSender = threads.get(sendingUsername);
@@ -118,6 +131,7 @@ public class SocketServer {
      * @param username String containing the username to search for
      * @return true if the user is online
      */
+
     boolean userAlreadyOnline(String username){
         synchronized (threads){
             for(String user: threads.keySet()){
