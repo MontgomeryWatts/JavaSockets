@@ -3,7 +3,6 @@ package gui.client.user;
 import gui.CommunicationRequest;
 import gui.client.Client;
 import gui.client.network.ReceiveMessageThread;
-import gui.client.network.SendMessageThread;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -14,11 +13,14 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Observable;
 import java.util.Observer;
 
 import static gui.CommunicationRequest.CommType.*;
+import static gui.CommunicationRequest.sendRequest;
 import static java.lang.Thread.sleep;
 
 /**
@@ -29,7 +31,7 @@ import static java.lang.Thread.sleep;
 public class ChatroomGUI extends Application implements Observer, Client{
     private Stage stage;
     private Scene chatScene;
-    private SendMessageThread smt;
+    private ObjectOutputStream toServer;
     private String username;
     private TextField text;
     private TextField userField;
@@ -100,7 +102,7 @@ public class ChatroomGUI extends Application implements Observer, Client{
     }
 
     /**
-     * Gets the text input by the user and sends it through the SendMessageThread.
+     * Gets the text input by the user and sends it to the server.
      */
 
     private void sendMessageEvent(){
@@ -113,7 +115,7 @@ public class ChatroomGUI extends Application implements Observer, Client{
                     || userText.substring(0, spaceIndex).equals("/w")){
                 try{
                     String nameAndMessage = userText.substring(spaceIndex + 1);
-                    smt.send(new CommunicationRequest<>(WHISPER, nameAndMessage.substring(nameAndMessage.indexOf(" ") + 1),
+                    sendRequest(toServer, new CommunicationRequest<>(WHISPER, nameAndMessage.substring(nameAndMessage.indexOf(" ") + 1),
                             nameAndMessage.substring(0, nameAndMessage.indexOf(" "))));
                     text.clear();
                 } catch(Exception e){
@@ -125,7 +127,7 @@ public class ChatroomGUI extends Application implements Observer, Client{
                     || userText.substring(0, spaceIndex).equals("/r")){
                 try{
                     String message = userText.substring(spaceIndex + 1);
-                    smt.send(new CommunicationRequest<>(WHISPER, message, lastWhispered));
+                    sendRequest(toServer, new CommunicationRequest<>(WHISPER, message, lastWhispered));
                     text.clear();
                 } catch(Exception e){
                     //If the user did not format the message correctly.
@@ -133,14 +135,14 @@ public class ChatroomGUI extends Application implements Observer, Client{
             }
 
             else{
-                smt.send(new CommunicationRequest<>(MESSAGE, username + ": " + userText));
+                sendRequest(toServer, new CommunicationRequest<>(MESSAGE, username + ": " + userText));
                 text.clear();
             }
         }
 
         //Prevents empty messages from being sent
         else if(!userText.replaceAll("\\s+", "").equals("")){
-            smt.send(new CommunicationRequest<>(MESSAGE, username + ": " + userText));
+            sendRequest(toServer, new CommunicationRequest<>(MESSAGE, username + ": " + userText));
             text.clear();
         }
     }
@@ -157,7 +159,7 @@ public class ChatroomGUI extends Application implements Observer, Client{
         if((username.equals(username.replaceAll("\\s+","")))
                 && (!username.replaceAll("\\s+", "").equals(""))
                 && (isValidUsername(username))){
-            smt.send(new CommunicationRequest<>(type, passField.getText(), username));
+            sendRequest(toServer, new CommunicationRequest<>(type, passField.getText(), username));
             passField.clear();
         }
         else{
@@ -217,6 +219,8 @@ public class ChatroomGUI extends Application implements Observer, Client{
         //Try to create a socket to communicate on
         try {
             socket = new Socket("localhost", 6000);
+            toServer = new ObjectOutputStream(socket.getOutputStream());
+            toServer.flush();
             sleep(1000);
         } catch(Exception e){
             System.exit(1);
@@ -225,12 +229,9 @@ public class ChatroomGUI extends Application implements Observer, Client{
         //Initialize and start Threads to send and retrieve messages to/from server
         ReceiveMessageThread rmt = new ReceiveMessageThread(socket, this);
         rmt.addObserver(this);
-        smt = new SendMessageThread(socket);
         Thread thread = new Thread(rmt);
         thread.setDaemon(true);
         thread.start();
-        smt.start();
-
 
         //Set actions for TextField and Button to send text
         text.setOnAction(event ->  sendMessageEvent());
@@ -242,12 +243,7 @@ public class ChatroomGUI extends Application implements Observer, Client{
         stage.setTitle("Let's chat!");
 
         //Tell the SocketServer to close the thread that corresponds to this client
-        //and close SendMessageThread
-        stage.setOnCloseRequest(event -> {
-            smt.send(new CommunicationRequest<>(CLOSE_THREAD, null));
-            smt.close();
-        });
-
+        stage.setOnCloseRequest(event -> sendRequest(toServer, new CommunicationRequest<>(CLOSE_THREAD, null)));
         stage.show();
     }
 
@@ -290,7 +286,6 @@ public class ChatroomGUI extends Application implements Observer, Client{
      */
 
     public void update(Observable observable, Object o) {
-        smt.send(new CommunicationRequest<>(SUCCESSFUL_LOGIN, null));
         Platform.runLater(() -> {
             stage.setScene(chatScene);
             stage.setMinHeight(300);

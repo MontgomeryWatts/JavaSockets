@@ -42,30 +42,21 @@ public class SocketServerThread extends Thread{
     public void run() {
         System.out.println("Connected to " + clientSocket.getRemoteSocketAddress());
         CommunicationRequest<?> clientInput = null;
-
+        boolean loginSuccess = false;
         //Try to register/login the user
         do{
             try {
                 clientInput = (CommunicationRequest<?>)fromClient.readObject();
-                String info = null;
+                String info = (String) clientInput.getData();
+                username =  clientInput.getRelevantUser();
 
-                // Have to check if client received and replied with successful login,since latency between replies
-                // will cause the server-side thread to re-enter the loop when it should exit
-                if((clientInput.getType() != SUCCESSFUL_LOGIN)){
-                    info = (String) clientInput.getData();
-                    username =  clientInput.getRelevantUser();
-                }
+                loginSuccess = (clientInput.getType() == NEW_USER) ? parentServer.registerNewUser(username, info)
+                        : (parentServer.authenticatePassword(username, info) && (!parentServer.userAlreadyOnline(username)));
 
-                if ((info != null) && (username != null)) {
-                    boolean loginSuccess;
-                    loginSuccess = (clientInput.getType() == NEW_USER) ? parentServer.registerNewUser(username, info)
-                            : (parentServer.authenticatePassword(username, info) && (!parentServer.userAlreadyOnline(username)));
-
-                    if (loginSuccess) {
-                        sendRequest(toClient, new CommunicationRequest<>(SUCCESSFUL_LOGIN, null));
-                    } else
-                        sendRequest(toClient, new CommunicationRequest<>(FAILED_LOGIN, null));
-                }
+                if (loginSuccess)
+                    sendRequest(toClient, new CommunicationRequest<>(SUCCESSFUL_LOGIN, null));
+                else
+                    sendRequest(toClient, new CommunicationRequest<>(FAILED_LOGIN, null));
 
             } catch(IOException ioe){
                 System.err.println("IOException while attempting to login a user.");
@@ -73,8 +64,7 @@ public class SocketServerThread extends Thread{
                 //This should never happen
                 System.err.println("ClassNotFoundException while attempting to login a user.");
             }
-        } while((clientInput.getType() != SUCCESSFUL_LOGIN)
-                && (clientInput.getType() != CLOSE_THREAD));
+        } while((!loginSuccess) && (clientInput.getType() != CLOSE_THREAD));
 
         //If the user successfully logged in
         if(clientInput.getType() != CLOSE_THREAD) {
