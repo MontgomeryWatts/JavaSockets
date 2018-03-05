@@ -15,7 +15,7 @@ import static gui.CommunicationRequest.CommType.*;
  * Server-side thread that handles a connection to a client
  */
 
-public class SocketServerThread extends Thread{
+public class SocketServerThread implements Runnable{
     private SocketServer parentServer;
     private Socket clientSocket;
     private ObjectInputStream fromClient;

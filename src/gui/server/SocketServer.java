@@ -6,6 +6,8 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static gui.CommunicationRequest.CommType.*;
 import static gui.CommunicationRequest.sendRequest;
@@ -18,6 +20,8 @@ import static gui.CommunicationRequest.sendRequest;
 
 public class SocketServer {
     private final File LOGIN_INFO_FILE = new File("logininfo.txt");
+    private ExecutorService executorService;
+    private final int NUM_THREADS = 10;
     private HashMap<String, ObjectOutputStream> threads;
     private final Salt salt;
 
@@ -29,6 +33,16 @@ public class SocketServer {
     private SocketServer(){
         threads = new HashMap<>();
         salt = new Salt(LOGIN_INFO_FILE);
+        executorService = Executors.newFixedThreadPool(NUM_THREADS);
+    }
+
+    /**
+     * Passes a newly created SocketServerThread to an ExecutorService which will attempt to run it
+     * @param thread The SocetServerThread of the new connection
+     */
+
+    private void accept(SocketServerThread thread){
+        executorService.execute(thread);
     }
 
     /**
@@ -147,6 +161,7 @@ public class SocketServer {
             System.out.println("USAGE: java SocketServer PORT");
             System.exit(1);
         }
+
         int serverPort = Integer.parseInt(args[0]);
         SocketServer mainServer = new SocketServer();
         ServerSocket serverSocket = null;
@@ -166,8 +181,7 @@ public class SocketServer {
 
             try{
                 socket = serverSocket.accept();
-                SocketServerThread serverThread = new SocketServerThread(mainServer, socket);
-                serverThread.start();
+                mainServer.accept(new SocketServerThread(mainServer, socket));
             } catch(IOException e){
                 System.out.println("Error accepting new client.");
             }
